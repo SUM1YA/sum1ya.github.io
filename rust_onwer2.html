@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rust Ownership & Borrowing — Interactive Explainer</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --bg-2: #171a21;
+    --bg-3: #1f232c;
+    --bg-4: #262b36;
+    --border: #2d3340;
+    --border-2: #3a4150;
+    --text: #e6e8ee;
+    --text-dim: #9aa3b2;
+    --text-mute: #6b7280;
+    --rust: #dea584;
+    --rust-2: #f5b88a;
+    --accent: #f5a524;
+    --info: #60a5fa;
+    --success: #4ade80;
+    --warn: #fbbf24;
+    --error: #f87171;
+    --move: #fb923c;
+    --borrow: #22d3ee;
+    --mut-borrow: #c084fc;
+    --shadow: 0 10px 30px rgba(0,0,0,0.4);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Thai", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+  button:focus-visible { outline: 2px solid var(--rust); outline-offset: 2px; border-radius: 6px; }
+
+  .app {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 18px 22px;
+    background: linear-gradient(135deg, var(--bg-2), var(--bg-3));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .brand-logo {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: radial-gradient(circle at 30% 30%, #f5b88a, #b8621b);
+    display: grid; place-items: center;
+    font-weight: 800; font-size: 22px; color: #1a1a1a;
+    box-shadow: 0 6px 20px rgba(222,165,132,0.3);
+  }
+  .brand-title { font-size: 18px; font-weight: 700; letter-spacing: 0.2px; }
+  .brand-sub { font-size: 12px; color: var(--text-dim); }
+  .progress-wrap { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-dim); }
+  .progress-bar {
+    width: 180px; height: 6px;
+    background: var(--bg-4);
+    border-radius: 999px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--rust), var(--accent));
+    transition: width 0.4s ease;
+    border-radius: 999px;
+  }
+
+  /* Topic tabs */
+  .topics {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+  }
+  .topic-btn {
+    padding: 12px 10px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    text-align: left;
+    transition: all 0.2s ease;
+    min-height: 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .topic-btn:hover { border-color: var(--border-2); background: var(--bg-3); }
+  .topic-btn.active {
+    background: linear-gradient(135deg, rgba(222,165,132,0.15), rgba(245,165,36,0.08));
+    border-color: var(--rust);
+    box-shadow: 0 0 0 1px var(--rust) inset;
+  }
+  .topic-num {
+    font-size: 11px;
+    color: var(--rust);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+  .topic-sig {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .topic-label { font-size: 11px; color: var(--text-dim); }
+
+  /* Workspace */
+  .workspace {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 16px;
+  }
+  .panel {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel-head {
+    padding: 12px 16px;
+    background: var(--bg-3);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .panel-title {
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-title .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--rust);
+    box-shadow: 0 0 8px var(--rust);
+  }
+  .panel-meta { font-size: 11px; color: var(--text-dim); font-family: monospace; }
+
+  /* Visual */
+  .visual {
+    flex: 1;
+    padding: 18px;
+    min-height: 360px;
+    position: relative;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(222,165,132,0.08), transparent 50%),
+      radial-gradient(circle at 80% 90%, rgba(96,165,250,0.06), transparent 50%),
+      var(--bg-2);
+  }
+  .visual svg { width: 100%; height: 100%; display: block; }
+
+  /* Code */
+  .code-wrap {
+    flex: 1;
+    overflow: auto;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .code-table { width: 100%; border-collapse: collapse; }
+  .code-line {
+    transition: background 0.25s ease;
+    cursor: pointer;
+  }
+  .code-line:hover { background: rgba(255,255,255,0.03); }
+  .code-line.active {
+    background: linear-gradient(90deg, rgba(222,165,132,0.18), rgba(222,165,132,0.04));
+    box-shadow: inset 3px 0 0 var(--rust);
+  }
+  .code-line.done { background: rgba(74,222,128,0.04); }
+  .code-line.future { opacity: 0.55; }
+  .code-line td { padding: 2px 12px; vertical-align: top; white-space: pre; }
+  .ln-num {
+    width: 40px;
+    color: var(--text-mute);
+    text-align: right;
+    user-select: none;
+    padding-right: 14px !important;
+    border-right: 1px solid var(--border);
+  }
+  .code-line.active .ln-num { color: var(--rust); font-weight: 700; }
+
+  /* Syntax colors */
+  .tok-kw { color: #ff79c6; }
+  .tok-fn { color: #8be9fd; }
+  .tok-str { color: #f1fa8c; }
+  .tok-num { color: #bd93f9; }
+  .tok-com { color: #6272a4; font-style: italic; }
+  .tok-ty { color: #8be9fd; font-style: italic; }
+  .tok-mac { color: #50fa7b; }
+  .tok-mut { color: #ffb86c; font-weight: 600; }
+  .tok-op { color: #ff79c6; }
+  .tok-var { color: #e6e8ee; }
+
+  /* Info panels */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 16px;
+  }
+  .explain {
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .step-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--rust-2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .step-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    background: rgba(222,165,132,0.15);
+    border: 1px solid var(--rust);
+    border-radius: 999px;
+    color: var(--rust-2);
+    font-weight: 600;
+  }
+  .explain-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .explain-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-mute);
+    font-weight: 700;
+  }
+  .explain-text { font-size: 13px; color: var(--text); line-height: 1.65; }
+  .explain-text code {
+    background: var(--bg-4);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--rust-2);
+  }
+
+  /* Inspector */
+  .inspector { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .insp-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .insp-list { display: flex; flex-direction: column; gap: 6px; }
+  .insp-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: monospace;
+    font-size: 12px;
+    transition: all 0.3s ease;
+  }
+  .insp-row.changed {
+    border-color: var(--rust);
+    background: rgba(222,165,132,0.08);
+    animation: pulse 0.6s ease;
+  }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+  .insp-name { color: var(--info); font-weight: 600; }
+  .insp-val { color: var(--text); }
+  .insp-type { color: var(--text-mute); font-size: 11px; }
+  .insp-change {
+    font-size: 11px;
+    color: var(--warn);
+    padding: 2px 6px;
+    background: rgba(251,191,36,0.1);
+    border-radius: 4px;
+  }
+
+  /* Controls */
+  .controls {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .ctrl-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .ctrl-btn {
+    padding: 8px 14px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    color: var(--text);
+  }
+  .ctrl-btn:hover:not(:disabled) {
+    background: var(--bg-4);
+    border-color: var(--border-2);
+    transform: translateY(-1px);
+  }
+  .ctrl-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .ctrl-btn.primary {
+    background: linear-gradient(135deg, var(--rust), #c48a5a);
+    color: #1a1a1a;
+    border-color: var(--rust);
+  }
+  .ctrl-btn.primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--rust-2), var(--rust));
+  }
+  .speed-group {
+    display: flex;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .speed-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-dim);
+    transition: all 0.15s ease;
+  }
+  .speed-btn.active {
+    background: var(--rust);
+    color: #1a1a1a;
+  }
+  .step-counter {
+    margin-left: auto;
+    font-family: monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  /* Timeline */
+  .timeline {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding: 4px 0;
+  }
+  .timeline::-webkit-scrollbar { height: 4px; }
+  .timeline::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 2px; }
+  .tl-step {
+    flex: 0 0 auto;
+    padding: 6px 10px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    transition: all 0.15s ease;
+    font-weight: 500;
+  }
+  .tl-step:hover { border-color: var(--border-2); color: var(--text); }
+  .tl-step.active {
+    background: var(--rust);
+    color: #1a1a1a;
+    border-color: var(--rust);
+    font-weight: 700;
+  }
+  .tl-step.done {
+    background: rgba(74,222,128,0.1);
+    border-color: rgba(74,222,128,0.3);
+    color: var(--success);
+  }
+
+  /* SVG styles */
+  .box {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .box-rect {
+    fill: var(--bg-3);
+    stroke: var(--border-2);
+    stroke-width: 1.5;
+    transition: all 0.4s ease;
+  }
+  .box.owner .box-rect { stroke: var(--rust); stroke-width: 2; fill: rgba(222,165,132,0.08); }
+  .box.mut .box-rect { stroke: var(--warn); stroke-width: 2; fill: rgba(251,191,36,0.08); }
+  .box.borrow .box-rect { stroke: var(--borrow); stroke-width: 2; fill: rgba(34,211,238,0.08); }
+  .box.mut-borrow .box-rect { stroke: var(--mut-borrow); stroke-width: 2; fill: rgba(192,132,252,0.08); }
+  .box.moved .box-rect { stroke: var(--error); stroke-width: 2; stroke-dasharray: 4 3; fill: rgba(248,113,113,0.06); opacity: 0.5; }
+  .box-label { fill: var(--text); font-size: 13px; font-weight: 600; font-family: monospace; }
+  .box-value { fill: var(--rust-2); font-size: 14px; font-weight: 700; font-family: monospace; }
+  .box-type { fill: var(--text-mute); font-size: 10px; font-family: monospace; }
+  .box-tag {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-family: sans-serif;
+  }
+  .arrow {
+    fill: none;
+    stroke-width: 2;
+    transition: all 0.4s ease;
+  }
+  .arrow.own { stroke: var(--rust); }
+  .arrow.borrow { stroke: var(--borrow); stroke-dasharray: 5 3; }
+  .arrow.mut-borrow { stroke: var(--mut-borrow); stroke-dasharray: 5 3; }
+  .arrow.moved { stroke: var(--error); stroke-dasharray: 3 3; opacity: 0.6; }
+  .arrow-label {
+    font-size: 10px;
+    font-family: monospace;
+    font-weight: 600;
+    fill: var(--text-dim);
+  }
+  .region-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    fill: var(--text-mute);
+    font-family: sans-serif;
+  }
+  .region-box {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+  }
+  .heap-box {
+    fill: rgba(222,165,132,0.04);
+    stroke: var(--rust);
+    stroke-width: 1.5;
+    stroke-dasharray: 4 2;
+  }
+  .heap-text { fill: var(--rust-2); font-family: monospace; font-size: 14px; font-weight: 600; }
+  .note {
+    font-size: 11px;
+    fill: var(--text-dim);
+    font-family: sans-serif;
+  }
+  .error-note {
+    font-size: 12px;
+    fill: var(--error);
+    font-weight: 700;
+    font-family: sans-serif;
+  }
+  .success-note {
+    font-size: 12px;
+    fill: var(--success);
+    font-weight: 700;
+    font-family: sans-serif;
+  }
+  .flash { animation: flash 0.8s ease; }
+  @keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .move-particle {
+    fill: var(--move);
+    animation: moveDot 0.8s ease;
+  }
+  @keyframes moveDot {
+    0% { opacity: 0; }
+    50% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  @media (max-width: 960px) {
+    .workspace { grid-template-columns: 1fr; }
+    .info-grid { grid-template-columns: 1fr; }
+    .topics { grid-template-columns: repeat(3, 1fr); }
+    .progress-bar { width: 120px; }
+  }
+  @media (max-width: 560px) {
+    .topics { grid-template-columns: repeat(2, 1fr); }
+    .app { padding: 12px; }
+    .header { padding: 14px; }
+    .brand-title { font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-logo">🦀</div>
+      <div>
+        <div class="brand-title">Rust Ownership & Borrowing</div>
+        <div class="brand-sub">Interactive Explainer · 6 Patterns · Line-by-Line Walkthrough</div>
+      </div>
+    </div>
+    <div class="progress-wrap">
+      <span id="progressText">ขั้นตอนที่ 1 / 10</span>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:10%"></div></div>
+    </div>
+  </header>
+
+  <!-- Topics -->
+  <nav class="topics" id="topics" aria-label="เลือกหัวข้อ"></nav>
+
+  <!-- Workspace -->
+  <section class="workspace">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><span class="dot"></span><span>ภาพจำลองหน่วยความจำ</span></div>
+        <div class="panel-meta" id="visMeta">Stack · Heap · Ownership</div>
+      </div>
+      <div class="visual" id="visual"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><span class="dot" style="background:var(--info);box-shadow:0 0 8px var(--info)"></span><span>ซอร์สโค้ด</span></div>
+        <div class="panel-meta" id="codeMeta">main.rs · Rust</div>
+      </div>
+      <div class="code-wrap" id="codeWrap"></div>
+    </div>
+  </section>
+
+  <!-- Info grid -->
+  <section class="info-grid">
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><span class="dot" style="background:var(--success);box-shadow:0 0 8px var(--success)"></span><span>คำอธิบายขั้นตอน</span></div>
+      </div>
+      <div class="explain" id="explain"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <div class="panel-title"><span class="dot" style="background:var(--warn);box-shadow:0 0 8px var(--warn)"></span><span>ตัวแปรและสถานะ</span></div>
+      </div>
+      <div class="inspector" id="inspector"></div>
+    </div>
+  </section>
+
+  <!-- Controls -->
+  <section class="controls">
+    <div class="ctrl-row">
+      <button class="ctrl-btn" id="btnReplay" title="เล่นใหม่">⟲ เล่นใหม่</button>
+      <button class="ctrl-btn" id="btnPrev" title="ขั้นตอนก่อน">◀ ก่อนหน้า</button>
+      <button class="ctrl-btn primary" id="btnPlay" title="เล่น/หยุด">▶ เล่น</button>
+      <button class="ctrl-btn" id="btnNext" title="ขั้นตอนถัดไป">ถัดไป ▶</button>
+      <div class="speed-group" role="group" aria-label="ความเร็ว">
+        <button class="speed-btn" data-speed="0.5">0.5×</button>
+        <button class="speed-btn active" data-speed="1">1×</button>
+        <button class="speed-btn" data-speed="2">2×</button>
+      </div>
+      <div class="step-counter" id="stepCounter">1 / 10</div>
+    </div>
+    <div class="timeline" id="timeline"></div>
+  </section>
+
+</div>
+
+<script>
+/* ============================================================
+   Rust Ownership & Borrowing — Interactive Explainer
+   ============================================================ */
+
+/* ---------- Rust syntax highlighter (simple tokenizer) ---------- */
+const RUST_KEYWORDS = new Set(['fn','let','mut','if','else','while','for','in','return','match','struct','enum','impl','trait','pub','use','mod','self','Self','super','where','as','ref','const','static','unsafe','extern','crate','loop','break','continue','move','async','await','dyn','type']);
+const RUST_TYPES = new Set(['String','i32','i64','u32','u64','usize','f32','f64','bool','char','Vec','Option','Result','&str']);
+
+function highlightRust(code) {
+  // Escape HTML
+  let s = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Comments
+  s = s.replace(/(\/\/[^\n]*)/g, '<span class="tok-com">$1</span>');
+  // Strings
+  s = s.replace(/("(?:\\.|[^"\\])*")/g, '<span class="tok-str">$1</span>');
+  // Macros (name!)
+  s = s.replace(/\b([a-zA-Z_][a-zA-Z0-9_]*)!/g, '<span class="tok-mac">$1!</span>');
+  // Numbers
+  s = s.replace(/\b(\d+)\b/g, '<span class="tok-num">$1</span>');
+  // Function calls
+  s = s.replace(/\b([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/g, (m, name) => {
+    if (RUST_KEYWORDS.has(name)) return m;
+    return `<span class="tok-fn">${name}</span>(`;
+  });
+  // Types (capitalized identifiers in type positions)
+  s = s.replace(/\b([A-Z][a-zA-Z0-9_]*)\b/g, (m, name) => {
+    if (RUST_TYPES.has(name) || /^[A-Z]/.test(name)) {
+      return `<span class="tok-ty">${name}</span>`;
+    }
+    return m;
+  });
+  // Keywords (must come after types)
+  s = s.replace(/\b(mut|let|fn|if|else|while|for|in|return|match|struct|enum|impl|trait|pub|use|mod|self|Self|ref|const|move)\b/g, '<span class="tok-kw">$1</span>');
+  return s;
+}
+
+/* ---------- Topic definitions ---------- */
+const TOPICS = [
+  {
+    id: 1,
+    sig: 'x: T',
+    label: 'Move & Immutable',
+    title: 'การ Move ค่าแบบ Immutable',
+    intro: 'เมื่อเราผูกค่ากับตัวแปรโดยไม่มี mut ค่าจะเป็น immutable และเมื่อส่งต่อให้ตัวแปรอื่น ค่าจะถูก "move" ออกไป ทำให้ตัวแปรเดิมใช้งานไม่ได้อีก',
+    code: [
+      'fn main() {',
+      '    let s1 = String::from("hello");',
+      '    // s1 เป็นเจ้าของ (owner) ค่า "hello"',
+      '    let s2 = s1;  // move: s1 -> s2',
+      '    // println!("{}", s1); // ❌ ERROR: s1 ถูก move แล้ว',
+      '    println!("{}", s2); // ✅ OK: s2 เป็นเจ้าของใหม่',
+      '}'
+    ],
+    steps: [
+      {
+        title: 'เริ่มต้นโปรแกรม',
+        lines: [1],
+        what: 'โปรแกรมเริ่มทำงานที่ฟังก์ชัน main()',
+        code: 'fn main() {',
+        why: 'ทุกโปรแกรม Rust เริ่มทำงานที่ฟังก์ชัน main',
+        state: 'ยังไม่มีตัวแปรใดถูกสร้าง',
+        visual: 'empty',
+        vars: [],
+        next: 'จะสร้างตัวแปร s1'
+      },
+      {
+        title: 'สร้างตัวแปร s1',
+        lines: [2],
+        what: 'ประกาศตัวแปร s1 แบบ immutable โดยผูกกับค่า String "hello"',
+        code: 'let s1 = String::from("hello");',
+        why: 'String::from สร้าง String ใหม่บน heap และ s1 เป็นเจ้าของ (owner) ค่านี้',
+        state: 's1 = "hello" (owner)',
+        visual: 's1-created',
+        vars: [{name:'s1', val:'"hello"', type:'String', tag:'owner'}],
+        next: 'จะสร้างตัวแปร s2'
+      },
+      {
+        title: 'อ่าน comment อธิบาย',
+        lines: [3],
+        what: 's1 เป็นเจ้าของค่า "hello" ใน heap',
+        code: '// s1 เป็นเจ้าของ (owner) ค่า "hello"',
+        why: 'ใน Rust แต่ละค่าจะมีเจ้าของเพียงคนเดียวเท่านั้น (ownership rule)',
+        state: 's1 ยังคงเป็นเจ้าของ',
+        visual: 's1-created',
+        vars: [{name:'s1', val:'"hello"', type:'String', tag:'owner'}],
+        next: 'จะทำการ move ค่า'
+      },
+      {
+        title: 'Move ค่าจาก s1 ไป s2',
+        lines: [4],
+        what: 'ประกาศตัวแปร s2 และกำหนดค่าจาก s1 — นี่คือการทำ "move"',
+        code: 'let s2 = s1;',
+        why: 'สำหรับข้อมูลบน heap เช่น String การกำหนดค่าจะย้าย (move) เจ้าของไป ไม่ใช่คัดลอก เพื่อป้องกัน double-free',
+        state: 's1 ถูก move → s2 เป็นเจ้าของใหม่',
+        visual: 'moved',
+        vars: [
+          {name:'s1', val:'<moved>', type:'String', tag:'moved'},
+          {name:'s2', val:'"hello"', type:'String', tag:'owner'}
+        ],
+        next: 'ลองใช้ s1 จะ error'
+      },
+      {
+        title: 'ใช้ s1 ไม่ได้แล้ว',
+        lines: [5],
+        what: 'ถ้าลองใช้ s1 ต่อ compiler จะ报错 (error) ว่าค่าถูก move แล้ว',
+        code: '// println!("{}", s1); // ❌ ERROR: s1 ถูก move แล้ว',
+        why: 'Rust ป้องกันการใช้ค่าที่ถูก move แล้วในระดับ compile-time เพื่อความปลอดภัยของหน่วยความจำ',
+        state: 's1 = <moved> (ใช้ไม่ได้)',
+        visual: 'moved',
+        vars: [
+          {name:'s1', val:'<moved>', type:'String', tag:'moved'},
+          {name:'s2', val:'"hello"', type:'String', tag:'owner'}
+        ],
+        next: 'ใช้ s2 แทน'
+      },
+      {
+        title: 'พิมพ์ค่าผ่าน s2',
+        lines: [6],
+        what: 'ใช้ println! พิมพ์ค่าของ s2 ซึ่งตอนนี้เป็นเจ้าของแล้ว',
+        code: 'println!("{}", s2); // ✅ OK',
+        why: 's2 เป็นเจ้าของที่ถูกต้อง จึงสามารถอ่านค่าได้',
+        state: 'พิมพ์ "hello" ออกมา',
+        visual: 'print-s2',
+        vars: [
+          {name:'s1', val:'<moved>', type:'String', tag:'moved'},
+          {name:'s2', val:'"hello"', type:'String', tag:'owner'}
+        ],
+        next: 'จบโปรแกรม'
+      },
+      {
+        title: 'จบฟังก์ชัน main',
+        lines: [7],
+        what: 'จบการทำงาน เมื่อสโคปสิ้นสุด s2 จะถูก drop (คืนหน่วยความจำ)',
+        code: '}',
+        why: 'Rust ใช้ระบบ drop อัตโนมัติเมื่อตัวแปรออกจากสโคป ไม่ต้องเรียก free เอง',
+        state: 's2 ถูก drop, คืนหน่วยความจำ',
+        visual: 'dropped',
+        vars: [],
+        next: 'จบการ walkthrough'
+      }
+    ]
+  },
+  {
+    id: 2,
+    sig: 'mut x: T',
+    label: 'Move & Mutable',
+    title: 'การ Move ค่าแบบ Mutable',
+    intro: 'เมื่อใช้ mut กับตัวแปร เราสามารถแก้ไขค่าที่เจ้าของครอบครองได้ แต่ยังคงเป็นระบบ move เหมือนเดิม',
+    code: [
+      'fn main() {',
+      '    let mut s = String::from("hello");',
+      '    // s เป็นเจ้าของ และแก้ไขได้ (mutable)',
+      '    s.push_str(", world");',
+      '    // s ตอนนี้คือ "hello, world"',
+      '    println!("{}", s);',
+      '}'
+    ],
+    steps: [
+      {
+        title: 'เริ่มต้นโปรแกรม',
+        lines: [1],
+        what: 'เริ่มฟังก์ชัน main()',
+        code: 'fn main() {',
+        why: 'จุดเริ่มต้นของโปรแกรม',
+        state: 'ยังไม่มีตัวแปร',
+        visual: 'empty',
+        vars: [],
+        next: 'สร้างตัวแปร mut s'
+      },
+      {
+        title: 'สร้าง mutable owner',
+        lines: [2],
+        what: 'ประกาศตัวแปร s ด้วย mut ทำให้แก้ไขค่าได้',
+        code: 'let mut s = String::from("hello");',
+        why: 'mut ทำให้เราสามารถเปลี่ยนแปลงค่าที่ s ครอบครองได้ เช่น เพิ่ม/ลบข้อความ',
+        state: 's = "hello" (mutable owner)',
+        visual: 's-created',
+        vars: [{name:'s', val:'"hello"', type:'String', tag:'mut-owner'}],
+        next: 'ดู comment'
+      },
+      {
+        title: 's แก้ไขได้',
+        lines: [3],
+        what: 's เป็นเจ้าของและแก้ไขค่าได้',
+        code: '// s เป็นเจ้าของ และแก้ไขได้',
+        why: 'การมี mut หมายความว่า s สามารถเรียก method ที่ใช้ &mut self ได้',
+        state: 's ยังเป็น "hello"',
+        visual: 's-created',
+        vars: [{name:'s', val:'"hello"', type:'mut-owner'}],
+        next: 'จะแก้ไขค่า'
+      },
+      {
+        title: 'แก้ไขค่าด้วย push_str',
+        lines: [4],
+        what: 'เรียก method push_str เพื่อเพิ่ม ", world" ต่อท้าย',
+        code: 's.push_str(", world");',
+        why: 'push_str ต้องการ &mut self ดังนั้น s ต้องเป็น mutable ถึงจะเรียกได้',
+        state: 's เปลี่ยนจาก "hello" → "hello, world"',
+        visual: 's-mutated',
+        vars: [{name:'s', val:'"hello, world"', type:'String', tag:'mut-owner', changed:true}],
+        next: 'ดูค่าใหม่'
+      },
+      {
+        title: 'ค่าใหม่',
+        lines: [5],
+        what: 'ตอนนี้ s มีค่าเป็น "hello, world"',
+        code: '// s ตอนนี้คือ "hello, world"',
+        why: 'การแก้ไขเกิดขึ้นใน heap เดิม แต่เนื้อหาเปลี่ยน',
+        state: 's = "hello, world"',
+        visual: 's-mutated',
+        vars: [{name:'s', val:'"hello, world"', type:'String', tag:'mut-owner'}],
+        next: 'พิมพ์ค่า'
+      },
+      {
+        title: 'พิมพ์ค่า',
+        lines: [6],
+        what: 'พิมพ์ค่าของ s ออกมา',
+        code: 'println!("{}", s);',
+        why: 'แสดงผลลัพธ์ "hello, world"',
+        state: 'พิมพ์ "hello, world"',
+        visual: 'print-s',
+        vars: [{name:'s', val:'"hello, world"', type:'String', tag:'mut-owner'}],
+        next: 'จบ'
+      },
+      {
+        title: 'จบโปรแกรม',
+        lines: [7],
+        what: 'จบฟังก์ชัน main, s ถูก drop',
+        code: '}',
+        why: 'คืนหน่วยความจำอัตโนมัติ',
+        state: 's ถูก drop',
+        visual: 'dropped',
+        vars: [],
+        next: 'จบ'
+      }
+    ]
+  },
+  {
+    id: 3,
+    sig: 'x: &T',
+    label: 'Immutable Borrow',
+    title: 'การยืมแบบ Immutable',
+    intro: 'การใช้ & เพื่อสร้าง reference แบบ immutable — ยืมค่ามาอ่านได้ แต่แก้ไขไม่ได้ และเจ้าของยังคงเป็นเจ้าของอยู่',
+    code: [
+      'fn main() {',
+      '    let s = String::from("hello");',
+      '    let r = &s;  // yืมแบบ immutable',
+      '    // r ชี้ไปหา s แต่ไม่ได้เป็นเจ้าของ',
+      '    println!("s = {}, r = {}", s, r);',
+      '    // ทั้ง s และ r ใช้งานพร้อมกันได้',
+      '}'
+    ],
+    steps: [
+      {
+        title: 'เริ่มต้น',
+        lines: [1],
+        what: 'เริ่มฟังก์ชัน main()',
+        code: 'fn main() {',
+        why: 'จุดเริ่มต้น',
+        state: 'ยังไม่มีตัวแปร',
+        visual: 'empty',
+        vars: [],
+        next: 'สร้าง s'
+      },
+      {
+        title: 'สร้างเจ้าของ s',
+        lines: [2],
+        what: 'สร้าง String "hello" และให้ s เป็นเจ้าของ',
+        code: 'let s = String::from("hello");',
+        why: 's เป็นเจ้าของค่านี้',
+        state: 's = "hello" (owner)',
+        visual: 's-created',
+        vars: [{name:'s', val:'"hello"', type:'String', tag:'owner'}],
+        next: 'สร้าง reference'
+      },
+      {
+        title: 'ยืมค่าด้วย &s',
+        lines: [3],
+        what: 'สร้าง reference r ที่ยืมค่าจาก s แบบ immutable',
+        code: 'let r = &s;',
+        why: '&s สร้าง reference ที่ชี้ไปหาข้อมูลของ s โดยไม่ย้ายเจ้าของ — เรียกว่า "borrow"',
+        state: 'r = &s (immutable borrow)',
+        visual: 'borrowed',
+        vars: [
+          {name:'s', val:'"hello"', type:'String', tag:'owner'},
+          {name:'r', val:'&s', type:'&String', tag:'borrow'}
+        ],
+        next: 'ดู comment'
+      },
+      {
+        title: 'r ชี้ไปหา s',
+        lines: [4],
+        what: 'r เป็นเพียง reference ที่ชี้ไปหาข้อมูลของ s ไม่ได้เป็นเจ้าของ',
+        code: '// r ชี้ไปหา s แต่ไม่ได้เป็นเจ้าของ',
+        why: 'reference ไม่มีสิทธิ์ในหน่วยความจำ — เมื่อ s ถูก drop, r จะใช้ไม่ได้อีก',
+        state: 'r → s → "hello"',
+        visual: 'borrowed',
+        vars: [
+          {name:'s', val:'"hello"', type:'String', tag:'owner'},
+          {name:'r', val:'&s', type:'&String', tag:'borrow'}
+        ],
+        next: 'พิมพ์ค่า'
+      },
+      {
+        title: 'ใช้ทั้ง s และ r พร้อมกัน',
+        lines: [5],
+        what: 'พิมพ์ทั้ง s (owner) และ r (borrow) พร้อมกันได้',
+        code: 'println!("s = {}, r = {}", s, r);',
+        why: 'immutable borrow อนุญาตให้มีได้หลายตัวพร้อมกัน และใช้ร่วมกับ owner ได้',
+        state: 'พิมพ์ "s = hello, r = hello"',
+        visual: 'print-both',
+        vars: [
+          {name:'s', val:'"hello"', type:'String', tag:'owner'},
+          {name:'r', val:'&s', type:'&String', tag:'borrow'}
+        ],
+        next: 'ดู comment'
+      },
+      {
+        title: 'ใช้งานพร้อมกันได้',
+        lines: [6],
+        what: 'ทั้ง owner และ immutable borrow ใช้งานพร้อมกันได้',
+        code: '// ทั้ง s และ r ใช้งานพร้อมกันได้',
+        why: 'นี่คือข้อดีของ immutable borrow — อ่านข้อมูลได้จากหลายที่พร้อมกัน',
+        state: 's และ r ยังใช้ได้',
+        visual: 'print-both',
+        vars: [
+          {name:'s', val:'"hello"', type:'String', tag:'owner'},
+          {name:'r', val:'&s', type:'&String', tag:'borrow'}
+        ],
+        next: 'จบ'
+      },
+      {
+        title: 'จบโปรแกรม',
+        lines: [7],
+        what: 'จบฟังก์ชัน main, s และ r ถูก drop',
+        code: '}',
+        why: 'r ถูก drop ก่อน (reverse order) แล้วตามด้วย s',
+        state: 'คืนหน่วยความจำ',
+        visual: 'dropped',
+        vars: [],
+        next: 'จบ'
+      }
+    ]
+  },
+  {
+    id: 4,
+    sig: 'x: &mut T',
+    label: 'Mutable Borrow',
+    title: 'การยืมแบบ Mutable',
+    intro: 'การใช้ &mut เพื่อยืมค่ามาแก้ไขได้ แต่ต้องเป็นเจ้าของแบบ mut และยืมได้เพียงคนเดียวในแต่ละช่วงเวลา',
+    code: [
+      'fn main() {',
+      '    let mut s = String::from("hello");',
+      '    let r = &mut s;  // ยืมแบบ mutable',
+      '    r.push_str(", world");',
+      '    // แก้ไขข้อมูลผ่าน reference',
+      '    println!("{}", s);',
+      '}'
+    ],
+    steps: [
+      {
+        title: 'เริ่มต้น',
+        lines: [1],
+        what: 'เริ่มฟังก์ชัน main()',
+        code: 'fn main() {',
+        why: 'จุดเริ่มต้น',
+        state: 'ยังไม่มีตัวแปร',
+        visual: 'empty',
+        vars: [],
+        next: 'สร้าง mut s'
+      },
+      {
+        title: 'สร้าง mutable owner',
+        lines: [2],
+        what: 'สร้าง s แบบ mutable เพื่อให้ยืมแบบ mutable ได้',
+        code: 'let mut s = String::from("hello");',
+        why: 'ต้องเป็น mut ถึงจะสร้าง &mut reference ได้',
+        state: 's = "hello" (mutable owner)',
+        visual: 's-created',
+        vars: [{name:'s', val:'"hello"', type:'String', tag:'mut-owner'}],
+        next: 'ยืมแบบ mutable'
+      },
+      {
+        title: 'ยืมแบบ mutable',
+        lines: [3],
+        what: 'สร้าง mutable reference r ที่ยืมค่าจาก s',
+        code: 'let r = &mut s;',
+        why: '&mut s ให้สิทธิ์แก้ไขข้อมูลผ่าน r แต่ s จะใช้ไม่ได้จนกว่า r จะหมดอายุ',
+        state: 'r = &mut s (mutable borrow)',
+        visual: 'mut-borrowed',
+        vars: [
+          {name:'s', val:'"hello"', type:'String', tag:'mut-owner'},
+          {name:'r', val:'&mut s', type:'&mut String', tag:'mut-borrow'}
+        ],
+        next: 'แก้ไขผ่าน r'
+      },
+      {
+        title: 'แก้ไขข้อมูลผ่าน reference',
+        lines: [4],
+        what: 'เรียก push_str ผ่าน r เพื่อแก้ไขข้อมูล',
+        code: 'r.push_str(", world");',
+        why: 'mutable borrow ให้สิทธิ์แก้ไขข้อมูลได้เหมือนเป็นเจ้าของ',
+        state: 'ข้อมูลเปลี่ยนเป็น "hello, world"',
+        visual: 'mut-mutated',
+        vars: [
+          {name:'s', val:'"hello, world"', type:'String', tag:'mut-owner', changed:true},
+          {name:'r', val:'&mut s', type:'&mut String', tag:'mut-borrow'}
+        ],
+        next: 'ดู comment'
+      },
+      {
+        title: 'แก้ไขผ่าน reference',
+        lines: [5],
+        what: 'การแก้ไขผ่าน mutable reference จะส่งผลต่อข้อมูลจริง',
+        code: '// แก้ไขข้อมูลผ่าน reference',
+        why: 'r และ s ชี้ไปหาข้อมูลเดียวกัน การแก้ไขผ่าน r จะเห็นผลผ่าน s ด้วย',
+        state: 'ข้อมูลใน heap = "hello, world"',
+        visual: 'mut-mutated',
+        vars: [
+          {name:'s', val:'"hello, world"', type:'String', tag:'mut-owner'},
+          {name:'r', val:'&mut s', type:'&mut String', tag:'mut-borrow'}
+        ],
+        next: 'พิมพ์ค่า'
+      },
+      {
+        title: 'พิมพ์ค่า',
+        lines: [6],
+        what: 'พิมพ์ค่าของ s (ซึ่งถูกแก้ไขผ่าน r แล้ว)',
+        code: 'println!("{}", s);',
+        why: 'หลังจาก r หมดอายุ (last use) s กลับมาใช้ได้อีก — นี่คือ Non-Lexical Lifetimes',
+        state: 'พิมพ์ "hello, world"',
+        visual: 'print-s',
+        vars: [
+          {name:'s', val:'"hello, world"', type:'String', tag:'mut-owner'},
+          {name:'r', val:'<last use>', type:'&mut String', tag:'done'}
+        ],
+        next: 'จบ'
+      },
+      {
+        title: 'จบโปรแกรม',
+        lines: [7],
+        what: 'จบ main, คืนหน่วยความจำ',
+        code: '}',
+        why: 's ถูก drop, คืนหน่วยความจำ heap',
+        state: 'drop s',
+        visual: 'dropped',
+        vars: [],
+        next: 'จบ'
+      }
+    ]
+  },
+  {
+    id: 5,
+    sig: 'mut x: &T',
+    label: 'Mutable Ref → Immutable Data',
+    title: 'Reference แก้ไขได้ แต่ข้อมูลแก้ไขไม่ได้',
+    intro: 'mut กับ &T หมายความว่า reference เองเปลี่ยนได้ (rebind) แต่ข้อมูลที่ชี้ไปหาแก้ไขไม่ได้',
+    code: [
+      'fn main() {',
+      '    let s1 = String::from("hello");',
+      '    let s2 = String::from("world");',
+      '    let mut r = &s1;  // r เปลี่ยนได้ แต่ข้อมูลที่ชี้แก้ไขไม่ได้',
+      '    println!("{}", r);  // "hello"',
+      '    r = &s2;  // rebind: r ชี้ไปหา s2 แทน',
+      '    println!("{}", r);  // "world"',
+      '    // *r = String::from("!"); // ❌ ERROR: ข้อมูลเป็น immutable',
+      '}'
+    ],
+    steps: [
+      {
+        title: 'เริ่มต้น',
+        lines: [1],
+        what: 'เริ่มฟังก์ชัน main()',
+        code: 'fn main() {',
+        why: 'จุดเริ่มต้น',
+        state: 'ยังไม่มีตัวแปร',
+        visual: 'empty',
+        vars: [],
+        next: 'สร้าง s1'
+      },
+      {
+        title: 'สร้าง s1',
+        lines: [2],
+        what: 'สร้าง String "hello" ให้ s1 เป็นเจ้าของ',
+        code: 'let s1 = String::from("hello");',
+        why: 's1 เป็นเจ้าของ "hello"',
+        state: 's1 = "hello"',
+        visual: 's1-created',
+        vars: [{name:'s1', val:'"hello"', type:'String', tag:'owner'}],
+        next: 'สร้าง s2'
+      },
+      {
+        title: 'สร้าง s2',
+        lines: [3],
+        what: 'สร้าง String "world" ให้ s2 เป็นเจ้าของ',
+        code: 'let s2 = String::from("world");',
+        why: 'ตอนนี้มี 2 ค่าในหน่วยความจำ',
+        state: 's1 = "hello", s2 = "world"',
+        visual: 's1-s2-created',
+        vars: [
+          {name:'s1', val:'"hello"', type:'String', tag:'owner'},
+          {name:'s2', val:'"world"', type:'String', tag:'owner'}
+        ],
+        next: 'สร้าง mutable reference'
+      },
+      {
+        title: 'สร้าง mutable reference',
+        lines: [4],
+        what: 'ประกาศ r แบบ mut โดยชี้ไปหา s1 — r เองเปลี่ยนได้ แต่ข้อมูลที่ชี้แก้ไขไม่ได้',
+        code: 'let mut r = &s1;',
+        why: 'mut อยู่หน้า r หมายถึง r เปลี่ยน target ได้ (rebind) แต่ &s1 เป็น immutable borrow แก้ไขข้อมูลไม่ได้',
+        state: 'r = &s1 (mutable reference)',
+        visual: 'mut-r-to-s1',
+        vars: [
+          {name:'s1', val:'"hello"', type:'String', tag:'owner'},
+          {name:'s2', val:'"world"', type:'String', tag:'owner'},
+          {name:'r', val:'&s1', type:'&String (mut)', tag:'mut-ref-immutable'}
+        ],
+        next: 'พิมพ์ค่า'
+      },
+      {
+        title: 'พิมพ์ค่า r',
+        lines: [5],
+        what: 'พิมพ์ค่าที่ r ชี้ไปหา ซึ่งคือ "hello"',
+        code: 'println!("{}", r);',
+        why: 'r ชี้ไปหา s1 ซึ่งมีค่า "hello"',
+        state: 'พิมพ์ "hello"',
+        visual: 'print-r-hello',
+        vars: [
+          {name:'s1', val:'"hello"', type:'String', tag:'owner'},
+          {name:'s2', val:'"world"', type:'String', tag:'owner'},
+          {name:'r', val:'&s1 → "hello"', type:'&String', tag:'mut-ref-immutable'}
+        ],
+        next: 'rebind r'
+      },
+      {
+        title: 'Rebind r ไปหา s2',
+        lines: [6],
+        what: 'เปลี่ยนให้ r ชี้ไปหา s2 แทน — ทำได้เพราะ r เป็น mut',
+        code: 'r = &s2;',
+        why: 'mut กับ reference หมายถึง "reference เองเปลี่ยน target ได้" ไม่ใช่ "ข้อมูลเปลี่ยนได้"',
+        state: 'r เปลี่ยนจาก &s1 → &s2',
+        visual: 'mut-r-to-s2',
+        vars: [
+          {name:'s1', val:'"hello"', type:'String', tag:'owner'},
+          {name:'s2', val:'"world"', type:'String', tag:'owner'},
+          {name:'r', val:'&s2', type:'&String (mut)', tag:'mut-ref-immutable', changed:true}
+        ],
+        next: 'พิมพ์ค่าใหม่'
+      },
+      {
+        title: 'พิมพ์ค่า r ใหม่',
+        lines: [7],
+        what: 'ตอนนี้ r ชี้ไปหา s2 จึงพิมพ์ "world"',
+        code: 'println!("{}", r);',
+        why: 'r ถูก rebind แล้ว ตอนนี้ชี้ไปหา s2',
+        state: 'พิมพ์ "world"',
+        visual: 'print-r-world',
+        vars: [
+          {name:'s1', val:'"hello"', type:'String', tag:'owner'},
+          {name:'s2', val:'"world"', type:'String', tag:'owner'},
+          {name:'r', val:'&s2 → "world"', type:'&String', tag:'mut-ref-immutable'}
+        ],
+        next: 'ดู error'
+      },
+      {
+        title: 'แก้ไขข้อมูลไม่ได้',
+        lines: [8],
+        what: 'ถ้าลองแก้ค่าผ่าน r จะ error เพราะข้อมูลเป็น immutable',
+        code: '// *r = String::from("!"); // ❌ ERROR',
+        why: '&T เป็น immutable borrow — แม้ reference เองจะเปลี่ยน target ได้ แต่ข้อมูลที่ชี้แก้ไขไม่ได้',
+        state: '❌ cannot assign to immutable borrowed content',
+        visual: 'error-immutable',
+        vars: [
+          {name:'s1', val:'"hello"', type:'String', tag:'owner'},
+          {name:'s2', val:'"world"', type:'String', tag:'owner'},
+          {name:'r', val:'&s2', type:'&String', tag:'mut-ref-immutable'}
+        ],
+        next: 'จบ'
+      },
+      {
+        title: 'จบโปรแกรม',
+        lines: [9],
+        what: 'จบ main, คืนหน่วยความจำ',
+        code: '}',
+        why: 's1, s2, r ถูก drop',
+        state: 'drop ทั้งหมด',
+        visual: 'dropped',
+        vars: [],
+        next: 'จบ'
+      }
+    ]
+  },
+  {
+    id: 6,
+    sig: 'mut x: &mut T',
+    label: 'Mutable Ref → Mutable Data',
+    title: 'Reference แก้ไขได้ และข้อมูลแก้ไขได้ด้วย',
+    intro: 'ใช้ mut ทั้ง reference และข้อมูล — reference เปลี่ยน target ได้ และข้อมูลที่ชี้ก็แก้ไขได้',
+    code: [
+      'fn main() {',
+      '    let mut s1 = String::from("hello");',
+      '    let mut s2 = String::from("world");',
+      '    let mut r = &mut s1;  // ทั้ง r และข้อมูลแก้ไขได้',
+      '    r.push_str("!");',
+      '    println!("{}", r);  // "hello!"',
+      '    r = &mut s2;  // rebind: r ชี้ไปหา s2',
+      '    r.push_str("?");',
+      '    println!("{}", r);  // "world?"',
+      '}'
+    ],
+    steps: [
+      {
+        title: 'เริ่มต้น',
+        lines: [1],
+        what: 'เริ่มฟังก์ชัน main()',
+        code: 'fn main() {',
+        why: 'จุดเริ่มต้น',
+        state: 'ยังไม่มีตัวแปร',
+        visual: 'empty',
+        vars: [],
+        next: 'สร้าง s1'
+      },
+      {
+        title: 'สร้าง mutable s1',
+        lines: [2],
+        what: 'สร้าง s1 แบบ mutable',
+        code: 'let mut s1 = String::from("hello");',
+        why: 'ต้องเป็น mut ถึงจะยืมแบบ &mut ได้',
+        state: 's1 = "hello"',
+        visual: 's1-created',
+        vars: [{name:'s1', val:'"hello"', type:'String', tag:'mut-owner'}],
+        next: 'สร้าง s2'
+      },
+      {
+        title: 'สร้าง mutable s2',
+        lines: [3],
+        what: 'สร้าง s2 แบบ mutable',
+        code: 'let mut s2 = String::from("world");',
+        why: 'เตรียมค่าที่สองสำหรับ rebind',
+        state: 's1 = "hello", s2 = "world"',
+        visual: 's1-s2-created',
+        vars: [
+          {name:'s1', val:'"hello"', type:'String', tag:'mut-owner'},
+          {name:'s2', val:'"world"', type:'String', tag:'mut-owner'}
+        ],
+        next: 'สร้าง mutable reference'
+      },
+      {
+        title: 'สร้าง mutable reference',
+        lines: [4],
+        what: 'สร้าง r ที่ทั้งตัวมันเองและข้อมูลที่ชี้แก้ไขได้',
+        code: 'let mut r = &mut s1;',
+        why: 'mut r = reference เปลี่ยน target ได้, &mut s1 = ข้อมูลแก้ไขได้',
+        state: 'r = &mut s1',
+        visual: 'mut-r-mut-to-s1',
+        vars: [
+          {name:'s1', val:'"hello"', type:'String', tag:'mut-owner'},
+          {name:'s2', val:'"world"', type:'String', tag:'mut-owner'},
+          {name:'r', val:'&mut s1', type:'&mut String', tag:'mut-ref-mut'}
+        ],
+        next: 'แก้ไขข้อมูล'
+      },
+      {
+        title: 'แก้ไขข้อมูลผ่าน r',
+        lines: [5],
+        what: 'เพิ่ม "!" ต่อท้ายผ่าน r',
+        code: 'r.push_str("!");',
+        why: 'mutable borrow ให้สิทธิ์แก้ไขข้อมูลได้',
+        state: 's1 เปลี่ยนเป็น "hello!"',
+        visual: 'mut-mutated-s1',
+        vars: [
+          {name:'s1', val:'"hello!"', type:'String', tag:'mut-owner', changed:true},
+          {name:'s2', val:'"world"', type:'String', tag:'mut-owner'},
+          {name:'r', val:'&mut s1', type:'&mut String', tag:'mut-ref-mut'}
+        ],
+        next: 'พิมพ์ค่า'
+      },
+      {
+        title: 'พิมพ์ค่า r',
+        lines: [6],
+        what: 'พิมพ์ค่าที่ r ชี้ไปหา',
+        code: 'println!("{}", r);',
+        why: 'แสดง "hello!"',
+        state: 'พิมพ์ "hello!"',
+        visual: 'print-r-hello-excl',
+        vars: [
+          {name:'s1', val:'"hello!"', type:'String', tag:'mut-owner'},
+          {name:'s2', val:'"world"', type:'String', tag:'mut-owner'},
+          {name:'r', val:'&mut s1 → "hello!"', type:'&mut String', tag:'mut-ref-mut'}
+        ],
+        next: 'rebind r'
+      },
+      {
+        title: 'Rebind r ไปหา s2',
+        lines: [7],
+        what: 'เปลี่ยนให้ r ชี้ไปหา s2',
+        code: 'r = &mut s2;',
+        why: 'r เป็น mut จึงเปลี่ยน target ได้',
+        state: 'r เปลี่ยนจาก &mut s1 → &mut s2',
+        visual: 'mut-r-mut-to-s2',
+        vars: [
+          {name:'s1', val:'"hello!"', type:'String', tag:'mut-owner'},
+          {name:'s2', val:'"world"', type:'String', tag:'mut-owner'},
+          {name:'r', val:'&mut s2', type:'&mut String', tag:'mut-ref-mut', changed:true}
+        ],
+        next: 'แก้ไข s2'
+      },
+      {
+        title: 'แก้ไข s2 ผ่าน r',
+        lines: [8],
+        what: 'เพิ่ม "?" ต่อท้าย s2 ผ่าน r',
+        code: 'r.push_str("?");',
+        why: 'mutable borrow ยังให้สิทธิ์แก้ไขได้',
+        state: 's2 เปลี่ยนเป็น "world?"',
+        visual: 'mut-mutated-s2',
+        vars: [
+          {name:'s1', val:'"hello!"', type:'String', tag:'mut-owner'},
+          {name:'s2', val:'"world?"', type:'String', tag:'mut-owner', changed:true},
+          {name:'r', val:'&mut s2', type:'&mut String', tag:'mut-ref-mut'}
+        ],
+        next: 'พิมพ์ค่า'
+      },
+      {
+        title: 'พิมพ์ค่า r',
+        lines: [9],
+        what: 'พิมพ์ค่าที่ r ชี้ไปหา',
+        code: 'println!("{}", r);',
+        why: 'แสดง "world?"',
+        state: 'พิมพ์ "world?"',
+        visual: 'print-r-world-q',
+        vars: [
+          {name:'s1', val:'"hello!"', type:'String', tag:'mut-owner'},
+          {name:'s2', val:'"world?"', type:'String', tag:'mut-owner'},
+          {name:'r', val:'&mut s2 → "world?"', type:'&mut String', tag:'mut-ref-mut'}
+        ],
+        next: 'จบ'
+      },
+      {
+        title: 'จบโปรแกรม',
+        lines: [10],
+        what: 'จบ main, คืนหน่วยความจำ',
+        code: '}',
+        why: 's1, s2, r ถูก drop',
+        state: 'drop ทั้งหมด',
+        visual: 'dropped',
+        vars: [],
+        next: 'จบ'
+      }
+    ]
+  }
+];
+
+/* ---------- State ---------- */
+const state = {
+  topicIdx: 0,
+  stepIdx: 0,
+  isPlaying: false,
+  speed: 1,
+  timer: null
+};
+
+/* ---------- DOM refs ---------- */
+const $ = (id) => document.getElementById(id);
+const topicsEl = $('topics');
+const visualEl = $('visual');
+const codeWrap = $('codeWrap');
+const explainEl = $('explain');
+const inspectorEl = $('inspector');
+const timelineEl = $('timeline');
+const progressFill = $('progressFill');
+const progressText = $('progressText');
+const stepCounter = $('stepCounter');
+const btnPlay = $('btnPlay');
+const btnPrev = $('btnPrev');
+const btnNext = $('btnNext');
+const btnReplay = $('btnReplay');
+
+/* ---------- Render topics ---------- */
+function renderTopics() {
+  topicsEl.innerHTML = TOPICS.map((t, i) => `
+    <button class="topic-btn ${i === state.topicIdx ? 'active' : ''}" data-topic="${i}" aria-label="${t.sig} ${t.label}">
+      <div class="topic-num">#${t.id}</div>
+      <div class="topic-sig">${escapeHtml(t.sig)}</div>
+      <div class="topic-label">${escapeHtml(t.label)}</div>
+    </button>
+  `).join('');
+  topicsEl.querySelectorAll('.topic-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.topicIdx = parseInt(btn.dataset.topic);
+      state.stepIdx = 0;
+      pause();
+      renderAll();
+    });
+  });
+}
+
+/* ---------- Render code panel ---------- */
+function renderCode() {
+  const topic = TOPICS[state.topicIdx];
+  const step = topic.steps[state.stepIdx];
+  const activeLines = new Set(step.lines);
+  const maxActive = Math.max(...step.lines);
+
+  let html = '<table class="code-table"><tbody>';
+  topic.code.forEach((line, i) => {
+    const ln = i + 1;
+    let cls = 'code-line';
+    if (activeLines.has(ln)) cls += ' active';
+    else if (ln < maxActive) cls += ' done';
+    else cls += ' future';
+    html += `<tr class="${cls}" data-line="${ln}">
+      <td class="ln-num">${ln}</td>
+      <td class="ln-code">${highlightRust(line) || '&nbsp;'}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  codeWrap.innerHTML = html;
+
+  // scroll active into view
+  const activeRow = codeWrap.querySelector('.code-line.active');
+  if (activeRow) {
+    activeRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  // click line to jump to step that contains it
+  codeWrap.querySelectorAll('.code-line').forEach(row => {
+    row.addEventListener('click', () => {
+      const ln = parseInt(row.dataset.line);
+      const idx = topic.steps.findIndex(s => s.lines.includes(ln));
+      if (idx >= 0) {
+        state.stepIdx = idx;
+        renderAll();
+      }
+    });
+  });
+}
+
+/* ---------- Render visual (SVG) ---------- */
+function renderVisual() {
+  const topic = TOPICS[state.topicIdx];
+  const step = topic.steps[state.stepIdx];
+  visualEl.innerHTML = buildSvg(step.visual, topic.id);
+}
+
+function buildSvg(kind, topicId) {
+  const W = 600, H = 380;
+  const stackX = 40, stackY = 60, stackW = 180, stackH = 280;
+  const heapX = 340, heapY = 60, heapW = 220, heapH = 280;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrow-own" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="#dea584"/>
+      </marker>
+      <marker id="arrow-borrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="#22d3ee"/>
+      </marker>
+      <marker id="arrow-mut" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="#c084fc"/>
+      </marker>
+      <marker id="arrow-moved" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="#f87171"/>
+      </marker>
+    </defs>
+    <text x="${stackX}" y="40" class="region-label">Stack</text>
+    <rect x="${stackX}" y="${stackY}" width="${stackW}" height="${stackH}" class="region-box" rx="8"/>
+    <text x="${heapX}" y="40" class="region-label">Heap</text>
+    <rect x="${heapX}" y="${heapY}" width="${heapW}" height="${heapH}" class="heap-box" rx="8"/>
+  `;
+
+  // Topic-specific rendering
+  if (kind === 'empty') {
+    svg += `<text x="${W/2}" y="${H/2}" text-anchor="middle" class="note">ยังไม่มีข้อมูลในหน่วยความจำ</text>`;
+  }
+  else if (kind === 'dropped') {
+    svg += `<text x="${W/2}" y="${H/2}" text-anchor="middle" class="note">คืนหน่วยความจำแล้ว (drop)</text>`;
+  }
+  else if (topicId === 1) {
+    svg += renderTopic1(kind);
+  }
+  else if (topicId === 2) {
+    svg += renderTopic2(kind);
+  }
+  else if (topicId === 3) {
+    svg += renderTopic3(kind);
+  }
+  else if (topicId === 4) {
+    svg += renderTopic4(kind);
+  }
+  else if (topicId === 5) {
+    svg += renderTopic5(kind);
+  }
+  else if (topicId === 6) {
+    svg += renderTopic6(kind);
+  }
+
+  svg += '</svg>';
+  return svg;
+}
+
+/* Helper: draw a variable box on stack */
+function stackBox(id, x, y, name, value, type, cls, tag) {
+  const w = 160, h = 64;
+  let tagHtml = '';
+  if (tag) {
+    const colors = {
+      'owner': '#dea584',
+      'mut-owner': '#fbbf24',
+      'moved': '#f87171',
+      'borrow': '#22d3ee',
+      'mut-borrow': '#c084fc',
+      'mut-ref-immutable': '#60a5fa',
+      'mut-ref-mut': '#c084fc',
+      'done': '#6b7280'
+    };
+    const c = colors[tag] || '#9aa3b2';
+    tagHtml = `<text x="${x+w-8}" y="${y+14}" text-anchor="end" class="box-tag" fill="${c}">${tag}</text>`;
+  }
+  return `
+    <g class="box ${cls}" data-id="${id}">
+      <rect class="box-rect" x="${x}" y="${y}" width="${w}" height="${h}" rx="8"/>
+      <text x="${x+10}" y="${y+20}" class="box-label">${escapeHtml(name)}</text>
+      <text x="${x+10}" y="${y+40}" class="box-value">${escapeHtml(value)}</text>
+      <text x="${x+10}" y="${y+56}" class="box-type">${escapeHtml(type)}</text>
+      ${tagHtml}
+    </g>
+  `;
+}
+
+/* Helper: heap string box */
+function heapString(id, x, y, value, cls='') {
+  const w = 180, h = 50;
+  return `
+    <g class="box ${cls}" data-id="${id}">
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="rgba(222,165,132,0.1)" stroke="#dea584" stroke-width="1.5"/>
+      <text x="${x+w/2}" y="${y+h/2+5}" text-anchor="middle" class="heap-text">${escapeHtml(value)}</text>
+    </g>
+  `;
+}
+
+/* Helper: arrow */
+function arrow(x1, y1, x2, y2, cls, label='', marker='own') {
+  const markerId = `arrow-${marker}`;
+  let labelHtml = '';
+  if (label) {
+    const mx = (x1+x2)/2, my = (y1+y2)/2;
+    labelHtml = `<text x="${mx}" y="${my-6}" text-anchor="middle" class="arrow-label">${escapeHtml(label)}</text>`;
+  }
+  return `
+    <path class="arrow ${cls}" d="M${x1},${y1} Q${(x1+x2)/2+20},${(y1+y2)/2} ${x2},${y2}" marker-end="url(#${markerId})"/>
+    ${labelHtml}
+  `;
+}
+
+/* ---------- Topic 1: Move & Immutable ---------- */
+function renderTopic1(kind) {
+  let s = '';
+  if (kind === 's1-created') {
+    s += stackBox('s1', 60, 100, 's1', '"hello"', 'String', 'owner', 'owner');
+    s += heapString('h1', 360, 110, 'hello');
+    s += arrow(220, 132, 360, 135, 'own', 'owns', 'own');
+  }
+  else if (kind === 'moved') {
+    s += stackBox('s1', 60, 100, 's1', '&lt;moved&gt;', 'String', 'moved', 'moved');
+    s += stackBox('s2', 60, 200, 's2', '"hello"', 'String', 'owner', 'owner');
+    s += heapString('h1', 360, 210, 'hello');
+    s += arrow(220, 132, 300, 180, 'moved', 'moved', 'moved');
+    s += arrow(220, 232, 360, 235, 'own', 'owns', 'own');
+    s += `<text x="${W()/2}" y="320" text-anchor="middle" class="error-note">⚠️ s1 ถูก move แล้ว — ใช้ไม่ได้</text>`;
+  }
+  else if (kind === 'print-s2') {
+    s += stackBox('s1', 60, 100, 's1', '&lt;moved&gt;', 'String', 'moved', 'moved');
+    s += stackBox('s2', 60, 200, 's2', '"hello"', 'String', 'owner', 'owner');
+    s += heapString('h1', 360, 210, 'hello');
+    s += arrow(220, 232, 360, 235, 'own', 'owns', 'own');
+    s += `<text x="${W()/2}" y="320" text-anchor="middle" class="success-note">✅ println!("{}", s2) → "hello"</text>`;
+  }
+  return s;
+}
+
+/* ---------- Topic 2: Move & Mutable ---------- */
+function renderTopic2(kind) {
+  let s = '';
+  if (kind === 's-created') {
+    s += stackBox('s', 60, 140, 's', '"hello"', 'String', 'mut owner', 'mut-owner');
+    s += heapString('h1', 360, 150, 'hello');
+    s += arrow(220, 172, 360, 175, 'own', 'owns', 'own');
+    s += `<text x="60" y="120" class="note" fill="#fbbf24">mut → แก้ไขได้</text>`;
+  }
+  else if (kind === 's-mutated') {
+    s += stackBox('s', 60, 140, 's', '"hello, world"', 'String', 'mut owner', 'mut-owner');
+    s += heapString('h1', 360, 150, 'hello, world');
+    s += arrow(220, 172, 360, 175, 'own', 'owns', 'own');
+    s += `<text x="60" y="120" class="note" fill="#fbbf24">mut → push_str()</text>`;
+    s += `<text x="${W()/2}" y="320" text-anchor="middle" class="success-note">✨ ค่าใน heap ถูกแก้ไข</text>`;
+  }
+  else if (kind === 'print-s') {
+    s += stackBox('s', 60, 140, 's', '"hello, world"', 'String', 'mut owner', 'mut-owner');
+    s += heapString('h1', 360, 150, 'hello, world');
+    s += arrow(220, 172, 360, 175, 'own', 'owns', 'own');
+    s += `<text x="${W()/2}" y="320" text-anchor="middle" class="success-note">✅ println!("{}", s) → "hello, world"</text>`;
+  }
+  return s;
+}
+
+/* ---------- Topic 3: Immutable Borrow ---------- */
+function renderTopic3(kind) {
+  let s = '';
+  if (kind === 's-created') {
+    s += stackBox('s', 60, 140, 's', '"hello"', 'String', 'owner', 'owner');
+    s += heapString('h1', 360, 150, 'hello');
+    s += arrow(220, 172, 360, 175, 'own', 'owns', 'own');
+  }
+  else if (kind === 'borrowed') {
+    s += stackBox('s', 60, 100, 's', '"hello"', 'String', 'owner', 'owner');
+    s += stackBox('r', 60, 220, 'r', '&s', '&String', 'borrow', 'borrow');
+    s += heapString('h1', 360, 110, 'hello');
+    s += arrow(220, 132, 360, 135, 'own', 'owns', 'own');
+    s += arrow(220, 252, 360, 135, 'borrow', 'borrows', 'borrow');
+    s += `<text x="60" y="80" class="note" fill="#22d3ee">& = immutable borrow (อ่านอย่างเดียว)</text>`;
+  }
+  else if (kind === 'print-both') {
+    s += stackBox('s', 60, 100, 's', '"hello"', 'String', 'owner', 'owner');
+    s += stackBox('r', 60, 220, 'r', '&s', '&String', 'borrow', 'borrow');
+    s += heapString('h1', 360, 110, 'hello');
+    s += arrow(220, 132, 360, 135, 'own', 'owns', 'own');
+    s += arrow(220, 252, 360, 135, 'borrow', 'borrows', 'borrow');
+    s += `<text x="${W()/2}" y="320" text-anchor="middle" class="success-note">✅ s และ r ใช้พร้อมกันได้</text>`;
+  }
+  return s;
+}
+
+/* ---------- Topic 4: Mutable Borrow ---------- */
+function renderTopic4(kind) {
+  let s = '';
+  if (kind === 's-created') {
+    s += stackBox('s', 60, 140, 's', '"hello"', 'String', 'mut owner', 'mut-owner');
+    s += heapString('h1', 360, 150, 'hello');
+    s += arrow(220, 172, 360, 175, 'own', 'owns', 'own');
+  }
+  else if (kind === 'mut-borrowed') {
+    s += stackBox('s', 60, 100, 's', '"hello"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('r', 60, 220, 'r', '&mut s', '&mut String', 'mut borrow', 'mut-borrow');
+    s += heapString('h1', 360, 110, 'hello');
+    s += arrow(220, 132, 360, 135, 'own', 'owns', 'own');
+    s += arrow(220, 252, 360, 135, 'mut-borrow', 'mut borrows', 'mut');
+    s += `<text x="60" y="80" class="note" fill="#c084fc">&mut = mutable borrow (แก้ไขได้)</text>`;
+  }
+  else if (kind === 'mut-mutated') {
+    s += stackBox('s', 60, 100, 's', '"hello, world"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('r', 60, 220, 'r', '&mut s', '&mut String', 'mut borrow', 'mut-borrow');
+    s += heapString('h1', 360, 110, 'hello, world');
+    s += arrow(220, 132, 360, 135, 'own', 'owns', 'own');
+    s += arrow(220, 252, 360, 135, 'mut-borrow', 'mut borrows', 'mut');
+    s += `<text x="${W()/2}" y="320" text-anchor="middle" class="success-note">✨ แก้ไขผ่าน r → s เห็นผล</text>`;
+  }
+  else if (kind === 'print-s') {
+    s += stackBox('s', 60, 100, 's', '"hello, world"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('r', 60, 220, 'r', '&mut s', '&mut String', 'last use', 'done');
+    s += heapString('h1', 360, 110, 'hello, world');
+    s += arrow(220, 132, 360, 135, 'own', 'owns', 'own');
+    s += `<text x="${W()/2}" y="320" text-anchor="middle" class="success-note">✅ println!("{}", s) → "hello, world"</text>`;
+  }
+  return s;
+}
+
+/* ---------- Topic 5: mut x: &T ---------- */
+function renderTopic5(kind) {
+  let s = '';
+  if (kind === 's1-created') {
+    s += stackBox('s1', 60, 140, 's1', '"hello"', 'String', 'owner', 'owner');
+    s += heapString('h1', 360, 150, 'hello');
+    s += arrow(220, 172, 360, 175, 'own', 'owns', 'own');
+  }
+  else if (kind === 's1-s2-created') {
+    s += stackBox('s1', 60, 90, 's1', '"hello"', 'String', 'owner', 'owner');
+    s += stackBox('s2', 60, 200, 's2', '"world"', 'String', 'owner', 'owner');
+    s += heapString('h1', 360, 100, 'hello');
+    s += heapString('h2', 360, 210, 'world');
+    s += arrow(220, 122, 360, 125, 'own', 'owns', 'own');
+    s += arrow(220, 232, 360, 235, 'own', 'owns', 'own');
+  }
+  else if (kind === 'mut-r-to-s1') {
+    s += stackBox('s1', 60, 80, 's1', '"hello"', 'String', 'owner', 'owner');
+    s += stackBox('s2', 60, 180, 's2', '"world"', 'String', 'owner', 'owner');
+    s += stackBox('r', 60, 280, 'r', '&s1', '&String (mut)', 'mut ref→immut', 'mut-ref-immutable');
+    s += heapString('h1', 360, 90, 'hello');
+    s += heapString('h2', 360, 190, 'world');
+    s += arrow(220, 112, 360, 115, 'own', '', 'own');
+    s += arrow(220, 212, 360, 215, 'own', '', 'own');
+    s += arrow(220, 312, 360, 115, 'borrow', 'r → s1', 'borrow');
+    s += `<text x="60" y="60" class="note" fill="#60a5fa">mut r: reference เปลี่ยนได้</text>`;
+    s += `<text x="60" y="270" class="note" fill="#60a5fa">&T: ข้อมูลเปลี่ยนไม่ได้</text>`;
+  }
+  else if (kind === 'print-r-hello') {
+    s += stackBox('s1', 60, 80, 's1', '"hello"', 'String', 'owner', 'owner');
+    s += stackBox('s2', 60, 180, 's2', '"world"', 'String', 'owner', 'owner');
+    s += stackBox('r', 60, 280, 'r', '&s1', '&String (mut)', 'mut ref→immut', 'mut-ref-immutable');
+    s += heapString('h1', 360, 90, 'hello');
+    s += heapString('h2', 360, 190, 'world');
+    s += arrow(220, 112, 360, 115, 'own', '', 'own');
+    s += arrow(220, 212, 360, 215, 'own', '', 'own');
+    s += arrow(220, 312, 360, 115, 'borrow', 'r → s1', 'borrow');
+    s += `<text x="${W()/2}" y="355" text-anchor="middle" class="success-note">✅ println!("{}", r) → "hello"</text>`;
+  }
+  else if (kind === 'mut-r-to-s2') {
+    s += stackBox('s1', 60, 80, 's1', '"hello"', 'String', 'owner', 'owner');
+    s += stackBox('s2', 60, 180, 's2', '"world"', 'String', 'owner', 'owner');
+    s += stackBox('r', 60, 280, 'r', '&s2', '&String (mut)', 'rebind!', 'mut-ref-immutable');
+    s += heapString('h1', 360, 90, 'hello');
+    s += heapString('h2', 360, 190, 'world');
+    s += arrow(220, 112, 360, 115, 'own', '', 'own');
+    s += arrow(220, 212, 360, 215, 'own', '', 'own');
+    s += arrow(220, 312, 360, 215, 'borrow', 'r → s2', 'borrow');
+    s += `<text x="${W()/2}" y="355" text-anchor="middle" class="success-note">✨ r ถูก rebind → ชี้ไปหา s2</text>`;
+  }
+  else if (kind === 'print-r-world') {
+    s += stackBox('s1', 60, 80, 's1', '"hello"', 'String', 'owner', 'owner');
+    s += stackBox('s2', 60, 180, 's2', '"world"', 'String', 'owner', 'owner');
+    s += stackBox('r', 60, 280, 'r', '&s2', '&String (mut)', 'mut ref→immut', 'mut-ref-immutable');
+    s += heapString('h1', 360, 90, 'hello');
+    s += heapString('h2', 360, 190, 'world');
+    s += arrow(220, 112, 360, 115, 'own', '', 'own');
+    s += arrow(220, 212, 360, 215, 'own', '', 'own');
+    s += arrow(220, 312, 360, 215, 'borrow', 'r → s2', 'borrow');
+    s += `<text x="${W()/2}" y="355" text-anchor="middle" class="success-note">✅ println!("{}", r) → "world"</text>`;
+  }
+  else if (kind === 'error-immutable') {
+    s += stackBox('s1', 60, 80, 's1', '"hello"', 'String', 'owner', 'owner');
+    s += stackBox('s2', 60, 180, 's2', '"world"', 'String', 'owner', 'owner');
+    s += stackBox('r', 60, 280, 'r', '&s2', '&String (mut)', 'mut ref→immut', 'mut-ref-immutable');
+    s += heapString('h1', 360, 90, 'hello');
+    s += heapString('h2', 360, 190, 'world');
+    s += arrow(220, 112, 360, 115, 'own', '', 'own');
+    s += arrow(220, 212, 360, 215, 'own', '', 'own');
+    s += arrow(220, 312, 360, 215, 'borrow', 'r → s2', 'borrow');
+    s += `<text x="${W()/2}" y="355" text-anchor="middle" class="error-note">❌ *r = ... → cannot assign to immutable borrowed content</text>`;
+  }
+  return s;
+}
+
+/* ---------- Topic 6: mut x: &mut T ---------- */
+function renderTopic6(kind) {
+  let s = '';
+  if (kind === 's1-created') {
+    s += stackBox('s1', 60, 140, 's1', '"hello"', 'String', 'mut owner', 'mut-owner');
+    s += heapString('h1', 360, 150, 'hello');
+    s += arrow(220, 172, 360, 175, 'own', 'owns', 'own');
+  }
+  else if (kind === 's1-s2-created') {
+    s += stackBox('s1', 60, 90, 's1', '"hello"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('s2', 60, 200, 's2', '"world"', 'String', 'mut owner', 'mut-owner');
+    s += heapString('h1', 360, 100, 'hello');
+    s += heapString('h2', 360, 210, 'world');
+    s += arrow(220, 122, 360, 125, 'own', '', 'own');
+    s += arrow(220, 232, 360, 235, 'own', '', 'own');
+  }
+  else if (kind === 'mut-r-mut-to-s1') {
+    s += stackBox('s1', 60, 80, 's1', '"hello"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('s2', 60, 180, 's2', '"world"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('r', 60, 280, 'r', '&mut s1', '&mut String (mut)', 'mut ref→mut', 'mut-ref-mut');
+    s += heapString('h1', 360, 90, 'hello');
+    s += heapString('h2', 360, 190, 'world');
+    s += arrow(220, 112, 360, 115, 'own', '', 'own');
+    s += arrow(220, 212, 360, 215, 'own', '', 'own');
+    s += arrow(220, 312, 360, 115, 'mut-borrow', 'r → s1', 'mut');
+  }
+  else if (kind === 'mut-mutated-s1') {
+    s += stackBox('s1', 60, 80, 's1', '"hello!"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('s2', 60, 180, 's2', '"world"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('r', 60, 280, 'r', '&mut s1', '&mut String (mut)', 'mut ref→mut', 'mut-ref-mut');
+    s += heapString('h1', 360, 90, 'hello!');
+    s += heapString('h2', 360, 190, 'world');
+    s += arrow(220, 112, 360, 115, 'own', '', 'own');
+    s += arrow(220, 212, 360, 215, 'own', '', 'own');
+    s += arrow(220, 312, 360, 115, 'mut-borrow', 'r → s1', 'mut');
+    s += `<text x="${W()/2}" y="355" text-anchor="middle" class="success-note">✨ s1 เปลี่ยนเป็น "hello!"</text>`;
+  }
+  else if (kind === 'print-r-hello-excl') {
+    s += stackBox('s1', 60, 80, 's1', '"hello!"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('s2', 60, 180, 's2', '"world"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('r', 60, 280, 'r', '&mut s1', '&mut String (mut)', 'mut ref→mut', 'mut-ref-mut');
+    s += heapString('h1', 360, 90, 'hello!');
+    s += heapString('h2', 360, 190, 'world');
+    s += arrow(220, 112, 360, 115, 'own', '', 'own');
+    s += arrow(220, 212, 360, 215, 'own', '', 'own');
+    s += arrow(220, 312, 360, 115, 'mut-borrow', 'r → s1', 'mut');
+    s += `<text x="${W()/2}" y="355" text-anchor="middle" class="success-note">✅ println!("{}", r) → "hello!"</text>`;
+  }
+  else if (kind === 'mut-r-mut-to-s2') {
+    s += stackBox('s1', 60, 80, 's1', '"hello!"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('s2', 60, 180, 's2', '"world"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('r', 60, 280, 'r', '&mut s2', '&mut String (mut)', 'rebind!', 'mut-ref-mut');
+    s += heapString('h1', 360, 90, 'hello!');
+    s += heapString('h2', 360, 190, 'world');
+    s += arrow(220, 112, 360, 115, 'own', '', 'own');
+    s += arrow(220, 212, 360, 215, 'own', '', 'own');
+    s += arrow(220, 312, 360, 215, 'mut-borrow', 'r → s2', 'mut');
+    s += `<text x="${W()/2}" y="355" text-anchor="middle" class="success-note">✨ r ถูก rebind → ชี้ไปหา s2</text>`;
+  }
+  else if (kind === 'mut-mutated-s2') {
+    s += stackBox('s1', 60, 80, 's1', '"hello!"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('s2', 60, 180, 's2', '"world?"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('r', 60, 280, 'r', '&mut s2', '&mut String (mut)', 'mut ref→mut', 'mut-ref-mut');
+    s += heapString('h1', 360, 90, 'hello!');
+    s += heapString('h2', 360, 190, 'world?');
+    s += arrow(220, 112, 360, 115, 'own', '', 'own');
+    s += arrow(220, 212, 360, 215, 'own', '', 'own');
+    s += arrow(220, 312, 360, 215, 'mut-borrow', 'r → s2', 'mut');
+    s += `<text x="${W()/2}" y="355" text-anchor="middle" class="success-note">✨ s2 เปลี่ยนเป็น "world?"</text>`;
+  }
+  else if (kind === 'print-r-world-q') {
+    s += stackBox('s1', 60, 80, 's1', '"hello!"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('s2', 60, 180, 's2', '"world?"', 'String', 'mut owner', 'mut-owner');
+    s += stackBox('r', 60, 280, 'r', '&mut s2', '&mut String (mut)', 'mut ref→mut', 'mut-ref-mut');
+    s += heapString('h1', 360, 90, 'hello!');
+    s += heapString('h2', 360, 190, 'world?');
+    s += arrow(220, 112, 360, 115, 'own', '', 'own');
+    s += arrow(220, 212, 360, 215, 'own', '', 'own');
+    s += arrow(220, 312, 360, 215, 'mut-borrow', 'r → s2', 'mut');
+    s += `<text x="${W()/2}" y="355" text-anchor="middle" class="success-note">✅ println!("{}", r) → "world?"</text>`;
+  }
+  return s;
+}
+
+function W() { return 600; }
+
+/* ---------- Render explanation ---------- */
+function renderExplain() {
+  const topic = TOPICS[state.topicIdx];
+  const step = topic.steps[state.stepIdx];
+  explainEl.innerHTML = `
+    <div class="step-title">
+      <span class="step-badge">ขั้นตอน ${state.stepIdx + 1}/${topic.steps.length}</span>
+      ${escapeHtml(step.title)}
+    </div>
+    <div class="explain-section">
+      <div class="explain-label">เกิดอะไรขึ้น</div>
+      <div class="explain-text">${escapeHtml(step.what)}</div>
+    </div>
+    <div class="explain-section">
+      <div class="explain-label">โค้ดบรรทัดนี้</div>
+      <div class="explain-text"><code>${escapeHtml(step.code)}</code></div>
+    </div>
+    <div class="explain-section">
+      <div class="explain-label">ทำไมต้องทำ</div>
+      <div class="explain-text">${escapeHtml(step.why)}</div>
+    </div>
+    <div class="explain-section">
+      <div class="explain-label">สถานะปัจจุบัน</div>
+      <div class="explain-text">${escapeHtml(step.state)}</div>
+    </div>
+    <div class="explain-section">
+      <div class="explain-label">ขั้นตอนถัดไป</div>
+      <div class="explain-text">${escapeHtml(step.next)}</div>
+    </div>
+  `;
+}
+
+/* ---------- Render inspector ---------- */
+function renderInspector() {
+  const topic = TOPICS[state.topicIdx];
+  const step = topic.steps[state.stepIdx];
+  if (!step.vars || step.vars.length === 0) {
+    inspectorEl.innerHTML = `
+      <div class="insp-title">ตัวแปร</div>
+      <div class="insp-list">
+        <div class="note" style="color:var(--text-mute);font-size:12px;padding:12px;">ยังไม่มีตัวแปรในสโคป</div>
+      </div>
+    `;
+    return;
+  }
+  inspectorEl.innerHTML = `
+    <div class="insp-title">ตัวแปร (${step.vars.length})</div>
+    <div class="insp-list">
+      ${step.vars.map(v => `
+        <div class="insp-row ${v.changed ? 'changed' : ''}">
+          <span class="insp-name">${escapeHtml(v.name)}</span>
+          <span class="insp-val">${escapeHtml(v.val)}</span>
+          <span class="insp-type">${escapeHtml(v.type || '')}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+/* ---------- Render timeline ---------- */
+function renderTimeline() {
+  const topic = TOPICS[state.topicIdx];
+  timelineEl.innerHTML = topic.steps.map((s, i) => {
+    let cls = 'tl-step';
+    if (i === state.stepIdx) cls += ' active';
+    else if (i < state.stepIdx) cls += ' done';
+    return `<button class="${cls}" data-step="${i}" title="${escapeHtml(s.title)}">${i+1}. ${escapeHtml(s.title)}</button>`;
+  }).join('');
+  timelineEl.querySelectorAll('.tl-step').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.stepIdx = parseInt(btn.dataset.step);
+      renderAll();
+    });
+  });
+}
+
+/* ---------- Render progress ---------- */
+function renderProgress() {
+  const topic = TOPICS[state.topicIdx];
+  const total = topic.steps.length;
+  const current = state.stepIdx + 1;
+  const pct = (current / total) * 100;
+  progressFill.style.width = pct + '%';
+  progressText.textContent = `ขั้นตอนที่ ${current} / ${total}`;
+  stepCounter.textContent = `${current} / ${total}`;
+}
+
+/* ---------- Master render ---------- */
+function renderAll() {
+  renderTopics();
+  renderCode();
+  renderVisual();
+  renderExplain();
+  renderInspector();
+  renderTimeline();
+  renderProgress();
+  updatePlayBtn();
+  updateNavBtns();
+}
+
+function updatePlayBtn() {
+  btnPlay.textContent = state.isPlaying ? '⏸ หยุด' : '▶ เล่น';
+}
+
+function updateNavBtns() {
+  const topic = TOPICS[state.topicIdx];
+  btnPrev.disabled = state.stepIdx === 0;
+  btnNext.disabled = state.stepIdx === topic.steps.length - 1;
+}
+
+/* ---------- Playback ---------- */
+function play() {
+  const topic = TOPICS[state.topicIdx];
+  if (state.stepIdx >= topic.steps.length - 1) {
+    state.stepIdx = 0;
+    renderAll();
+  }
+  state.isPlaying = true;
+  updatePlayBtn();
+  scheduleNext();
+}
+
+function pause() {
+  state.isPlaying = false;
+  if (state.timer) {
+    clearTimeout(state.timer);
+    state.timer = null;
+  }
+  updatePlayBtn();
+}
+
+function scheduleNext() {
+  if (state.timer) clearTimeout(state.timer);
+  if (!state.isPlaying) return;
+  const topic = TOPICS[state.topicIdx];
+  if (state.stepIdx >= topic.steps.length - 1) {
+    pause();
+    return;
+  }
+  const delay = 2200 / state.speed;
+  state.timer = setTimeout(() => {
+    state.stepIdx++;
+    renderAll();
+    scheduleNext();
+  }, delay);
+}
+
+function nextStep() {
+  const topic = TOPICS[state.topicIdx];
+  if (state.stepIdx < topic.steps.length - 1) {
+    state.stepIdx++;
+    renderAll();
+  }
+  if (state.isPlaying) scheduleNext();
+}
+
+function prevStep() {
+  if (state.stepIdx > 0) {
+    state.stepIdx--;
+    renderAll();
+  }
+  if (state.isPlaying) scheduleNext();
+}
+
+function replay() {
+  pause();
+  state.stepIdx = 0;
+  renderAll();
+}
+
+function setSpeed(speed) {
+  state.speed = speed;
+  document.querySelectorAll('.speed-btn').forEach(b => {
+    b.classList.toggle('active', parseFloat(b.dataset.speed) === speed);
+  });
+  if (state.isPlaying) {
+    // reschedule with new speed
+    if (state.timer) clearTimeout(state.timer);
+    scheduleNext();
+  }
+}
+
+/* ---------- Helpers ---------- */
+function escapeHtml(s) {
+  if (s === undefined || s === null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/* ---------- Event bindings ---------- */
+btnPlay.addEventListener('click', () => {
+  if (state.isPlaying) pause();
+  else play();
+});
+btnPrev.addEventListener('click', prevStep);
+btnNext.addEventListener('click', nextStep);
+btnReplay.addEventListener('click', replay);
+document.querySelectorAll('.speed-btn').forEach(b => {
+  b.addEventListener('click', () => setSpeed(parseFloat(b.dataset.speed)));
+});
+
+/* Keyboard navigation */
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'ArrowRight') { e.preventDefault(); nextStep(); }
+  else if (e.key === 'ArrowLeft') { e.preventDefault(); prevStep(); }
+  else if (e.key === ' ') { e.preventDefault(); state.isPlaying ? pause() : play(); }
+});
+
+/* ---------- Init ---------- */
+renderAll();
+</script>
+</body>
+</html>

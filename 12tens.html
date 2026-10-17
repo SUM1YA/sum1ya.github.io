@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123a44">
+  <title>Tense Studio — เรียนรู้ 12 Tenses</title>
+  <style>
+    /* ---------- Design tokens & foundations ---------- */
+    :root {
+      --bg: #f3f6f7;
+      --surface: #ffffff;
+      --ink: #17333e;
+      --muted: #617680;
+      --line: #dce6e9;
+      --teal: #087f80;
+      --teal-dark: #066062;
+      --teal-light: #e5f5f2;
+      --orange: #c56920;
+      --orange-light: #fff2e3;
+      --blue: #4764bc;
+      --blue-light: #edf0fc;
+      --red: #aa3545;
+      --red-light: #fff0f2;
+      --radius: 22px;
+      --shadow: 0 12px 35px rgba(21, 54, 65, .055);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Leelawadee UI", "Noto Sans Thai", Tahoma, system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    button, select { font: inherit; }
+    button, a, select { -webkit-tap-highlight-color: transparent; }
+    button { cursor: pointer; }
+    button:disabled { cursor: default; }
+    button, select { touch-action: manipulation; }
+    :focus-visible { outline: 3px solid var(--orange); outline-offset: 4px; }
+    h1, h2, h3, p { margin: 0; }
+    h1, h2, h3 { line-height: 1.4; }
+    a { color: inherit; }
+    svg { display: block; max-width: 100%; }
+    [hidden] { display: none !important; }
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0;
+      margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0);
+      white-space: nowrap; border: 0;
+    }
+    .skip-link {
+      position: absolute; top: -100px; left: 16px; z-index: 10;
+      background: var(--ink); color: white; padding: 12px 20px; border-radius: 12px;
+    }
+    .skip-link:focus { top: 12px; }
+    .wrap { width: min(1320px, calc(100% - 48px)); margin: auto; }
+    .eyebrow {
+      font-size: 11px; font-weight: 800; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--teal);
+    }
+    .muted { color: var(--muted); }
+    .small { font-size: 13px; }
+    .card {
+      background: var(--surface); border: 1px solid var(--line);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 5px 11px; border-radius: 100px; font-size: 12px;
+      font-weight: 700; background: var(--teal-light); color: var(--teal-dark);
+    }
+    .button {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; min-height: 42px; padding: 8px 15px;
+      border: 1px solid var(--line); border-radius: 12px;
+      background: white; color: var(--ink); font-weight: 700; font-size: 13px;
+      transition: background .2s, transform .2s, border-color .2s;
+    }
+    .button:hover:not(:disabled) { background: var(--teal-light); border-color: #9fcfca; }
+    .button:active:not(:disabled) { transform: translateY(1px); }
+    .button.primary { background: var(--teal); border-color: var(--teal); color: white; }
+    .button.primary:hover { background: var(--teal-dark); }
+    .button:disabled { opacity: .45; }
+    .button svg { width: 17px; height: 17px; flex-shrink: 0; }
+
+    /* ---------- Header & learning map ---------- */
+    .topbar { background: white; border-bottom: 1px solid var(--line); }
+    .topbar .wrap {
+      min-height: 76px; display: flex; align-items: center;
+      justify-content: space-between; gap: 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; font-weight: 800; }
+    .brand-mark {
+      width: 38px; height: 38px; display: grid; place-items: center;
+      background: var(--ink); color: #a6ebd5; border-radius: 12px;
+    }
+    .brand-mark svg { width: 24px; height: 24px; }
+    .brand small { display: block; color: var(--muted); font-size: 10px; letter-spacing: .08em; }
+    .top-link { text-decoration: none; font-size: 13px; font-weight: 700; }
+    .hero { padding: 34px 0 25px; display: flex; justify-content: space-between; gap: 24px; align-items: end; }
+    .hero h1 { font-size: clamp(27px, 3.1vw, 42px); letter-spacing: -.035em; margin: 7px 0 10px; }
+    .hero h1 span { color: var(--teal); }
+    .hero p { color: var(--muted); max-width: 690px; }
+    .hero-stats { display: flex; gap: 22px; flex-shrink: 0; padding-bottom: 4px; }
+    .hero-stats strong { display: block; font-size: 25px; line-height: 1.3; }
+    .hero-stats span { color: var(--muted); font-size: 12px; }
+    .layout { display: grid; grid-template-columns: 255px minmax(0, 1fr); gap: 22px; align-items: start; }
+    .sidebar { padding: 20px 15px; position: sticky; top: 18px; }
+    .sidebar-title { padding: 0 7px 10px; }
+    .sidebar-title h2 { font-size: 17px; margin-bottom: 4px; }
+    .tense-group { margin-top: 15px; }
+    .group-title {
+      font-size: 11px; letter-spacing: .07em; color: var(--muted);
+      font-weight: 800; margin: 0 8px 7px; display: flex; gap: 7px; align-items: center;
+    }
+    .group-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); }
+    .tense-group[data-time="past"] .group-dot { background: var(--blue); }
+    .tense-group[data-time="future"] .group-dot { background: var(--orange); }
+    .tense-list { display: grid; gap: 5px; }
+    .tense-button {
+      width: 100%; display: flex; align-items: center; gap: 9px; padding: 10px;
+      text-align: left; border: 1px solid transparent; border-radius: 11px;
+      background: transparent; color: var(--muted); font-size: 12px; font-weight: 600;
+      transition: background .2s, color .2s;
+    }
+    .tense-button:hover { background: #f3f7f8; color: var(--ink); }
+    .tense-button[aria-pressed="true"] {
+      background: var(--teal-light); border-color: #b4ded7; color: var(--teal-dark);
+    }
+    .tense-number { font-size: 10px; opacity: .8; min-width: 20px; }
+    .sidebar-foot { border-top: 1px solid var(--line); margin-top: 19px; padding: 15px 7px 0; font-size: 12px; color: var(--muted); }
+    .content { min-width: 0; display: grid; gap: 20px; }
+    .lesson { overflow: hidden; }
+    .lesson-head { padding: 25px 27px 19px; }
+    .lesson-meta { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+    .lesson-meta .number { font-size: 12px; color: var(--muted); }
+    .lesson h2 { font-size: clamp(23px, 2.7vw, 32px); letter-spacing: -.035em; }
+    .lesson-subtitle { color: var(--muted); margin-top: 5px; }
+    .step-tabs {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px;
+      padding: 0 27px 20px;
+    }
+    .step-tab {
+      border: 1px solid var(--line); background: white; border-radius: 12px;
+      min-height: 47px; padding: 9px 8px; font-weight: 700; color: var(--muted); font-size: 13px;
+    }
+    .step-tab span {
+      display: inline-grid; place-items: center; width: 22px; height: 22px;
+      margin-right: 5px; border-radius: 50%; background: #eff3f5; font-size: 11px;
+    }
+    .step-tab[aria-selected="true"] { background: var(--ink); color: white; border-color: var(--ink); }
+    .step-tab[aria-selected="true"] span { background: #365661; color: #b3f4de; }
+
+    /* ---------- Animated timeline ---------- */
+    .animation-scope { padding: 0 27px 25px; }
+    .timeline-card {
+      border: 1px solid #d4e8e4; border-radius: 17px;
+      background: linear-gradient(145deg, #f0faf7, #f8fbfc);
+      padding: 18px 18px 14px; transition: border-color .3s, box-shadow .3s;
+    }
+    .timeline-card.focused { border-color: #75bcb0; box-shadow: 0 0 0 3px #087f8008; }
+    .timeline-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .timeline-top strong { font-size: 13px; }
+    .animation-controls { display: flex; gap: 6px; }
+    .animation-controls .button { min-height: 35px; padding: 5px 10px; font-size: 12px; background: #ffffffb8; }
+    .timeline-svg { width: 100%; height: auto; overflow: visible; margin: 5px 0; }
+    .timeline-svg text { font-family: inherit; }
+    .timeline-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 11px; color: var(--muted); }
+    .timeline-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-line { width: 17px; height: 4px; background: var(--teal); border-radius: 3px; }
+    .legend-ref { width: 4px; height: 12px; background: var(--orange); border-radius: 2px; }
+    .timeline-caption { font-size: 13px; margin: 12px 0 0; color: #34565d; min-height: 44px; }
+    .runner { animation: travel 3.6s ease-in-out infinite; }
+    .event-halo { transform-box: fill-box; transform-origin: center; animation: pulse 2.4s ease-out infinite; }
+    .repeat-dot { animation: repeatBeat 3.6s ease-in-out infinite; animation-delay: var(--delay, 0s); }
+    .flow-line { stroke-dasharray: 8 7; animation: flow 1.6s linear infinite; }
+    .reveal { animation: reveal .4s ease-out both; }
+    .stagger { animation: reveal .42s ease-out both; animation-delay: var(--delay, 0s); }
+    .paused .runner, .paused .event-halo, .paused .repeat-dot,
+    .paused .flow-line, .paused .reveal, .paused .stagger { animation-play-state: paused; }
+    @keyframes travel {
+      0%, 12% { transform: translateX(0); opacity: 0; }
+      18% { opacity: 1; }
+      78% { transform: translateX(var(--travel)); opacity: 1; }
+      90%, 100% { transform: translateX(var(--travel)); opacity: 0; }
+    }
+    @keyframes pulse { 0% { transform: scale(.8); opacity: .7; } 100% { transform: scale(2.3); opacity: 0; } }
+    @keyframes repeatBeat { 0%, 100% { opacity: .3; } 35%, 60% { opacity: 1; } }
+    @keyframes flow { to { stroke-dashoffset: -30; } }
+    @keyframes reveal { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ---------- Explanations & examples ---------- */
+    .detail-panel { padding-top: 23px; min-height: 300px; }
+    .detail-heading { display: flex; gap: 10px; align-items: center; margin-bottom: 13px; }
+    .detail-heading h3 { font-size: 18px; }
+    .detail-icon {
+      display: grid; place-items: center; width: 30px; height: 30px;
+      background: var(--teal-light); color: var(--teal); border-radius: 9px; font-weight: 800;
+    }
+    .use-text { font-size: 17px; line-height: 1.85; }
+    .signal-box { margin-top: 17px; padding: 14px 16px; border-radius: 13px; background: #f4f7f8; }
+    .signal-box strong { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+    .signal-words { display: flex; flex-wrap: wrap; gap: 7px; }
+    .signal-words span { background: white; border: 1px solid var(--line); padding: 3px 9px; border-radius: 7px; font-size: 12px; }
+    .note { margin-top: 15px; border-left: 3px solid #dfac64; padding: 9px 13px; background: #fff8ee; border-radius: 0 9px 9px 0; font-size: 13px; color: #795623; }
+    .formula-list { display: grid; gap: 10px; }
+    .formula-row { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 10px; align-items: start; padding: 13px; border: 1px solid var(--line); border-radius: 12px; }
+    .formula-label { font-size: 12px; color: var(--muted); padding-top: 3px; }
+    .formula { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 14px; font-weight: 650; color: var(--teal-dark); overflow-wrap: anywhere; }
+    .grammar-key { margin-top: 13px; font-size: 12px; color: var(--muted); }
+    .examples { display: grid; gap: 10px; }
+    .example { padding: 14px 16px; border: 1px solid var(--line); border-radius: 13px; }
+    .example-kind { color: var(--teal); font-weight: 700; font-size: 11px; display: block; margin-bottom: 5px; }
+    .example-en { font-size: 16px; font-weight: 650; }
+    .example-th { font-size: 13px; color: var(--muted); margin-top: 4px; }
+    mark { color: var(--teal-dark); background: #e0f4ed; border-radius: 4px; padding: 1px 3px; }
+    .lesson-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 20px; border-top: 1px solid var(--line); padding-top: 16px; }
+    .lesson-footer p { font-size: 12px; color: var(--muted); }
+
+    /* ---------- Practice ---------- */
+    .practice { padding: 25px 27px; scroll-margin-top: 20px; }
+    .practice-top { display: flex; justify-content: space-between; align-items: start; gap: 18px; }
+    .practice h2 { font-size: 23px; margin: 4px 0; }
+    .practice select {
+      width: 100%; min-height: 42px; color: var(--ink); border: 1px solid var(--line);
+      background: white; border-radius: 10px; padding: 7px 31px 7px 11px; font-size: 12px;
+    }
+    .mode-control { min-width: 165px; }
+    .mode-control label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; }
+    .progress-meta { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--muted); margin-top: 20px; }
+    .progress-track { height: 6px; border-radius: 10px; background: #eaf0f2; overflow: hidden; margin: 8px 0 22px; }
+    .progress-fill { height: 100%; width: 0; background: var(--teal); transition: width .4s; border-radius: inherit; }
+    .question-tag { color: var(--teal); font-size: 11px; font-weight: 700; }
+    .question { font-size: 20px; margin: 7px 0; line-height: 1.7; overflow-wrap: anywhere; }
+    .question-hint { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .option {
+      display: flex; align-items: center; gap: 10px; border: 1px solid var(--line);
+      border-radius: 12px; padding: 13px; min-height: 54px; background: white;
+      text-align: left; color: var(--ink); font-size: 14px;
+      transition: background .2s, border-color .2s;
+    }
+    .option:hover:not(:disabled) { border-color: var(--teal); background: #f4fbf9; }
+    .option-letter { width: 26px; height: 26px; display: grid; place-items: center; flex-shrink: 0; border-radius: 7px; background: #f0f4f6; font-size: 11px; font-weight: 700; }
+    .option.correct { background: var(--teal-light); border-color: #66b8a8; color: var(--teal-dark); }
+    .option.incorrect { background: var(--red-light); border-color: #d898a2; color: var(--red); }
+    .option.correct .option-letter { background: #c7eadd; }
+    .option.incorrect .option-letter { background: #f4d2d9; }
+    .feedback { margin-top: 15px; border-radius: 12px; padding: 15px; font-size: 13px; }
+    .feedback.success { background: var(--teal-light); color: var(--teal-dark); }
+    .feedback.error { background: var(--orange-light); color: #81501e; }
+    .feedback strong { display: block; font-size: 14px; margin-bottom: 4px; }
+    .practice-nav { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 19px; flex-wrap: wrap; }
+    .practice-nav > div { display: flex; gap: 7px; }
+    .reset { background: none; border: none; color: var(--muted); font-size: 12px; text-decoration: underline; padding: 9px 0; }
+    .completion { background: var(--blue-light); border-radius: 12px; color: #394f97; padding: 13px 15px; font-size: 13px; margin-top: 15px; }
+    .reference { padding: 22px 25px; }
+    .reference h2 { font-size: 17px; margin-bottom: 13px; }
+    .reference-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+    .reference-item strong { color: var(--teal-dark); font-size: 13px; }
+    .reference-item p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    footer { padding: 25px 0 30px; text-align: center; font-size: 12px; color: var(--muted); }
+    noscript { display: block; padding: 25px; color: var(--red); background: white; }
+
+    /* ---------- Responsive & reduced motion ---------- */
+    @media (min-width: 1400px) { .lesson-head { padding-top: 29px; } }
+    @media (max-width: 1050px) {
+      .layout { grid-template-columns: 222px minmax(0, 1fr); gap: 16px; }
+      .hero-stats { gap: 16px; }
+      .hero-stats strong { font-size: 22px; }
+      .animation-scope, .practice { padding-left: 20px; padding-right: 20px; }
+      .lesson-head { padding-left: 20px; padding-right: 20px; }
+      .step-tabs { padding-left: 20px; padding-right: 20px; }
+    }
+    @media (max-width: 800px) {
+      .wrap { width: calc(100% - 32px); }
+      .hero { align-items: start; }
+      .hero-stats { display: none; }
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; padding: 17px 14px; }
+      .sidebar-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+      .tense-map { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+      .tense-group { margin-top: 5px; }
+      .group-title { font-size: 10px; margin-left: 5px; letter-spacing: 0; }
+      .tense-button { padding: 9px 7px; min-height: 49px; font-size: 11px; line-height: 1.45; gap: 4px; }
+      .tense-number { display: none; }
+      .sidebar-foot { display: none; }
+    }
+    @media (max-width: 480px) {
+      body { font-size: 14px; }
+      .topbar .wrap { min-height: 66px; }
+      .brand { font-size: 14px; }
+      .top-link { font-size: 12px; }
+      .hero { padding: 25px 0 20px; }
+      .hero h1 { font-size: 29px; }
+      .lesson-head { padding: 21px 17px 17px; }
+      .step-tabs { padding: 0 17px 16px; gap: 5px; }
+      .step-tab { font-size: 11px; padding: 8px 4px; }
+      .step-tab span { width: 19px; height: 19px; margin-right: 2px; }
+      .animation-scope { padding: 0 17px 20px; }
+      .timeline-card { padding: 13px 11px; }
+      .timeline-top strong { font-size: 12px; }
+      .animation-controls .button { padding: 5px 8px; font-size: 11px; }
+      .animation-controls .button svg { width: 13px; }
+      .timeline-legend { gap: 10px; font-size: 10px; }
+      .timeline-caption { font-size: 12px; }
+      .detail-panel { min-height: 330px; }
+      .use-text { font-size: 15px; }
+      .formula-row { grid-template-columns: 56px minmax(0, 1fr); gap: 6px; padding: 11px; }
+      .formula { font-size: 12px; }
+      .formula-label { font-size: 11px; }
+      .example-en { font-size: 14px; }
+      .lesson-footer { align-items: start; }
+      .lesson-footer p { max-width: 150px; }
+      .practice { padding: 22px 17px; }
+      .practice-top { flex-direction: column; gap: 12px; }
+      .mode-control { width: 100%; }
+      .question { font-size: 18px; }
+      .options { grid-template-columns: 1fr; }
+      .reference { padding: 20px 17px; }
+      .reference-grid { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition: none !important; }
+      .runner, .event-halo { display: none; animation: none; }
+      .repeat-dot, .flow-line, .reveal, .stagger { animation: none; opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#lesson">ข้ามไปยังบทเรียน</a>
+  <header class="topbar">
+    <div class="wrap">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 28 28" fill="none">
+            <path d="M5 8h18M14 8v15M6 19l5-5 5 3 6-8" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div>TENSE STUDIO<small>เข้าใจเวลา • ใช้ภาษาได้จริง</small></div>
+      </div>
+      <a class="top-link" href="#practice">ทำแบบฝึกหัด ↗</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <div class="eyebrow">ห้องเรียนภาษาอังกฤษแบบโต้ตอบ</div>
+        <h1 id="page-title">12 Tenses <span>เข้าใจ ไม่ใช่แค่ท่อง</span></h1>
+        <p>ดูเส้นเวลา → แกะโครงสร้าง → อ่านตัวอย่าง → ลองทำเอง เลือกเรียนทีละรูปแบบได้ตามจังหวะของคุณ</p>
+      </div>
+      <div class="hero-stats" aria-label="12 บทเรียน 36 ตัวอย่าง 24 แบบฝึกหัด">
+        <div><strong>12</strong><span>บทเรียน</span></div>
+        <div><strong>36</strong><span>ตัวอย่าง</span></div>
+        <div><strong>24</strong><span>แบบฝึกหัด</span></div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <aside class="sidebar card" aria-label="เลือกบทเรียน">
+        <div class="sidebar-title">
+          <h2>แผนที่ 12 Tenses</h2>
+          <p class="small muted">เลือกช่วงเวลา + ลักษณะเหตุการณ์</p>
+        </div>
+        <nav class="tense-map" id="tense-map" aria-label="บทเรียนทั้ง 12 รูปแบบ"></nav>
+        <p class="sidebar-foot">เคล็ดลับ: เริ่มจาก Simple แล้วเปรียบเทียบกับ Continuous ก่อนเรียนกลุ่ม Perfect</p>
+      </aside>
+
+      <div class="content">
+        <section class="lesson card" id="lesson" aria-labelledby="lesson-title">
+          <div class="lesson-head">
+            <div class="lesson-meta">
+              <span class="pill" id="time-badge"></span>
+              <span class="number" id="lesson-number"></span>
+            </div>
+            <h2 id="lesson-title" lang="en"></h2>
+            <p class="lesson-subtitle" id="lesson-subtitle"></p>
+          </div>
+
+          <div class="step-tabs" role="tablist" aria-label="ขั้นตอนการเรียน">
+            <button class="step-tab" id="tab-0" role="tab" aria-selected="true" aria-controls="detail-panel" data-step="0"><span>1</span>เข้าใจเวลา</button>
+            <button class="step-tab" id="tab-1" role="tab" aria-selected="false" aria-controls="detail-panel" tabindex="-1" data-step="1"><span>2</span>โครงสร้าง</button>
+            <button class="step-tab" id="tab-2" role="tab" aria-selected="false" aria-controls="detail-panel" tabindex="-1" data-step="2"><span>3</span>ตัวอย่าง</button>
+          </div>
+
+          <div class="animation-scope" id="animation-scope">
+            <div class="timeline-card focused" id="timeline-card">
+              <div class="timeline-top">
+                <strong>มองเหตุการณ์บนเส้นเวลา</strong>
+                <div class="animation-controls">
+                  <button class="button" id="play-button" aria-label="หยุดภาพเคลื่อนไหวชั่วคราว"></button>
+                  <button class="button" id="replay-button" aria-label="เล่นภาพเคลื่อนไหวใหม่">
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 10a8 8 0 1 1 1 7M4 4v6h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    เล่นใหม่
+                  </button>
+                </div>
+              </div>
+              <svg id="timeline" class="timeline-svg" viewBox="0 0 640 175" role="img" aria-labelledby="timeline-title timeline-desc"></svg>
+              <div class="timeline-legend">
+                <span><i class="legend-line" aria-hidden="true"></i>เหตุการณ์ / ช่วงที่เกิด</span>
+                <span><i class="legend-ref" aria-hidden="true"></i>เวลาอ้างอิง</span>
+              </div>
+              <p class="timeline-caption" id="timeline-caption"></p>
+              <p class="sr-only" id="motion-note"></p>
+            </div>
+            <div class="detail-panel" id="detail-panel" role="tabpanel" aria-labelledby="tab-0" tabindex="0"></div>
+            <div class="lesson-footer">
+              <p id="step-description">เริ่มจากความหมาย ก่อนจำสูตร</p>
+              <button class="button" id="next-step">ดูโครงสร้าง →</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="practice card" id="practice" aria-labelledby="practice-title">
+          <div class="practice-top">
+            <div>
+              <div class="eyebrow">ลองใช้ด้วยตัวเอง</div>
+              <h2 id="practice-title">เช็กความเข้าใจ</h2>
+              <p class="small muted">เลือกคำตอบที่ถูกต้อง รับคำอธิบายทันที</p>
+            </div>
+            <div class="mode-control">
+              <label for="practice-mode">ชุดแบบฝึกหัด</label>
+              <select id="practice-mode">
+                <option value="current">เฉพาะบทเรียนนี้ · 2 ข้อ</option>
+                <option value="all">รวม 12 Tenses · 24 ข้อ</option>
+              </select>
+            </div>
+          </div>
+          <div class="progress-meta">
+            <span id="practice-progress"></span>
+            <span id="practice-score"></span>
+          </div>
+          <div class="progress-track" id="progress-track" role="progressbar" aria-label="ความคืบหน้าแบบฝึกหัด" aria-valuemin="0" aria-valuemax="2" aria-valuenow="0">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+          <div id="question-area">
+            <div class="question-tag" id="question-tag"></div>
+            <h3 class="question" id="question-text" tabindex="-1" lang="en"></h3>
+            <p class="question-hint" id="question-hint"></p>
+            <div class="options" id="options" role="group" aria-labelledby="question-text" aria-describedby="question-hint"></div>
+          </div>
+          <div id="feedback" class="feedback" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+          <div class="completion" id="completion" role="status" hidden></div>
+          <div class="practice-nav">
+            <button class="reset" id="reset-practice">เริ่มชุดนี้ใหม่</button>
+            <div>
+              <button class="button" id="previous-question">← ข้อก่อน</button>
+              <button class="button primary" id="next-question">ข้อถัดไป →</button>
+            </div>
+          </div>
+          <p class="small muted" style="margin-top:14px">คะแนนนับคำตอบครั้งแรกของแต่ละข้อ และเก็บไว้ระหว่างใช้งานหน้านี้ เมื่อรีเฟรชจะเริ่มใหม่</p>
+        </section>
+
+        <section class="reference card" aria-labelledby="reference-title">
+          <h2 id="reference-title">เข็มทิศจำง่าย: 4 ลักษณะ × 3 ช่วงเวลา</h2>
+          <div class="reference-grid">
+            <div class="reference-item"><strong>Simple · ข้อเท็จจริง / เหตุการณ์</strong><p>มองสิ่งที่เกิดเป็นภาพรวม เช่น กิจวัตร หรือเหตุการณ์หนึ่งในอดีตและอนาคต</p></div>
+            <div class="reference-item"><strong>Continuous · กำลังดำเนินอยู่</strong><p>ซูมเข้าไปในเหตุการณ์ ณ เวลาอ้างอิง ใช้ be + V-ing</p></div>
+            <div class="reference-item"><strong>Perfect · ก่อนเวลาอ้างอิง</strong><p>มองย้อนจากเวลาอ้างอิง เน้นผล ประสบการณ์ หรือสิ่งที่ต่อเนื่องมาถึงเวลานั้น ใช้ have + V3</p></div>
+            <div class="reference-item"><strong>Perfect Continuous · เน้นระยะเวลา</strong><p>เน้นกิจกรรมที่ดำเนินต่อเนื่องก่อนหรือจนถึงเวลาอ้างอิง ใช้ have + been + V-ing</p></div>
+          </div>
+          <p class="small muted" style="margin-top:15px">“12 Tenses” เป็นกรอบการเรียนที่ใช้กันทั่วไป โดยรวมรูปแบบเวลาและลักษณะเหตุการณ์ไว้ด้วยกัน คำบอกเวลาเป็นเพียงตัวช่วย ต้องดูบริบทและความหมายด้วย</p>
+        </section>
+      </div>
+    </div>
+    <footer>เรียนทีละรูปแบบ แล้วลองแต่งประโยคเกี่ยวกับชีวิตของคุณเองอีก 1 ประโยค</footer>
+  </main>
+
+  <noscript>กรุณาเปิดใช้งาน JavaScript เพื่อเลือกบทเรียน ดูภาพเคลื่อนไหว และทำแบบฝึกหัด</noscript>
+
+  <script>
+    "use strict";
+
+    /* ---------- Content model ----------
+       Each lesson contains usage, three sentence patterns, three examples,
+       a timeline explanation, and two independently scored questions.
+       In example strings, [brackets] mark the target verb phrase.
+    */
+    const lessons = [
+      {
+        id: "present-simple", time: "present", aspect: "simple",
+        name: "Present Simple", subtitle: "เรื่องจริง กิจวัตร และสิ่งที่เกิดเป็นประจำ",
+        use: "ใช้พูดถึงนิสัย กิจวัตร ข้อเท็จจริงทั่วไป และตารางเวลาที่กำหนดไว้ ไม่ได้แปลว่าเหตุการณ์กำลังเกิดขึ้นตอนที่พูดเสมอไป",
+        signals: ["every day", "usually", "often", "sometimes"],
+        note: "ประธาน he / she / it ใช้กริยาเติม -s หรือ -es ในประโยคบอกเล่า แต่หลัง does / doesn't ต้องใช้ V1 ไม่เติม -s",
+        patterns: ["S + V1(s/es)", "S + do/does + not + V1", "Do/Does + S + V1?"],
+        examples: [
+          ["กิจวัตร", "She [walks] to school every day.", "เธอเดินไปโรงเรียนทุกวัน"],
+          ["ปฏิเสธ", "He [does not drink] coffee.", "เขาไม่ดื่มกาแฟ"],
+          ["คำถาม", "[Do] you [work] on Saturdays?", "คุณทำงานวันเสาร์ไหม"]
+        ],
+        timeline: "จุดหลายจุดแสดงการเกิดซ้ำ ทั้งก่อนและหลังตอนนี้ เช่น การเดินไปโรงเรียนทุกวัน ไม่ใช่เหตุการณ์ที่กำลังดำเนินอยู่เพียงครั้งเดียว",
+        questions: [
+          { text: "My brother ___ breakfast at 7 every day.", hint: "เลือก Present Simple ให้สอดคล้องกับประธานเอกพจน์", options: ["eat", "eats", "eating", "have eaten"], answer: 1, why: "My brother เป็นเอกพจน์บุรุษที่สาม จึงใช้ eats เพื่อบอกกิจวัตรที่เกิดทุกวัน" },
+          { text: "___ she play tennis every weekend?", hint: "เติมกริยาช่วยในคำถาม Present Simple", options: ["Do", "Is", "Does", "Has"], answer: 2, why: "คำถามที่มีกริยาหลัก play และประธาน she ใช้ Does + she + V1 จึงไม่เติม -s ที่ play" }
+        ]
+      },
+      {
+        id: "present-continuous", time: "present", aspect: "continuous",
+        name: "Present Continuous", subtitle: "กำลังเกิดขึ้นตอนนี้ หรือเป็นสถานการณ์ชั่วคราว",
+        use: "ใช้กับสิ่งที่กำลังดำเนินอยู่ตอนพูด หรือสถานการณ์ชั่วคราวในช่วงนี้ และใช้พูดถึงแผนอนาคตที่นัดหมายหรือจัดเตรียมไว้แล้วได้",
+        signals: ["now", "right now", "at the moment", "this week"],
+        note: "กริยาบอกสภาวะ เช่น know, believe และ own โดยทั่วไปไม่ใช้รูป Continuous เช่น I know the answer. ไม่ใช่ I am knowing the answer.",
+        patterns: ["S + am/is/are + V-ing", "S + am/is/are + not + V-ing", "Am/Is/Are + S + V-ing?"],
+        examples: [
+          ["กำลังเกิดขึ้น", "I [am studying] English right now.", "ฉันกำลังเรียนภาษาอังกฤษอยู่ตอนนี้"],
+          ["ปฏิเสธ", "They [are not watching] TV at the moment.", "พวกเขาไม่ได้กำลังดูทีวีอยู่ในขณะนี้"],
+          ["คำถาม", "[Is] she [working] from home this week?", "สัปดาห์นี้เธอทำงานจากบ้านอยู่หรือเปล่า"]
+        ],
+        timeline: "แถบสีเขียวคร่อมเส้น “ตอนนี้” แสดงว่าเหตุการณ์เริ่มแล้วและกำลังดำเนินอยู่ ไม่ได้เน้นว่าจบเมื่อไร",
+        questions: [
+          { text: "Look! The baby ___ .", hint: "ใช้ Present Continuous บอกสิ่งที่กำลังเห็น", options: ["sleep", "is sleeping", "are sleeping", "sleeping"], answer: 1, why: "The baby เป็นเอกพจน์ ใช้ is + sleeping เพื่อบอกว่ากำลังนอนอยู่" },
+          { text: "They ___ working right now.", hint: "เลือกกริยาช่วยให้ตรงกับประธาน They", options: ["is", "am", "are", "be"], answer: 2, why: "ประธาน they ใช้ are โครงสร้างคือ They are working right now." }
+        ]
+      },
+      {
+        id: "present-perfect", time: "present", aspect: "perfect",
+        name: "Present Perfect", subtitle: "สิ่งที่เกิดก่อนตอนนี้ และเชื่อมโยงกับปัจจุบัน",
+        use: "ใช้พูดถึงประสบการณ์โดยไม่ระบุเวลาที่จบแล้ว ผลของเหตุการณ์ที่เกี่ยวข้องกับตอนนี้ หรือสภาวะที่เริ่มในอดีตและยังต่อเนื่องถึงปัจจุบัน",
+        signals: ["already", "yet", "ever / never", "since / for", "so far"],
+        note: "ไม่ใช้กับเวลาอดีตที่จบแล้ว เช่น yesterday หรือ last year ในความหมายปกติ ถ้าระบุเวลานั้นให้ใช้ Past Simple แทน",
+        patterns: ["S + have/has + V3", "S + have/has + not + V3", "Have/Has + S + V3?"],
+        examples: [
+          ["ผลถึงปัจจุบัน", "I [have lost] my keys, so I can't open the door.", "ฉันทำกุญแจหาย จึงเปิดประตูตอนนี้ไม่ได้"],
+          ["ปฏิเสธ", "She [has not finished] her homework yet.", "เธอยังทำการบ้านไม่เสร็จ"],
+          ["ประสบการณ์", "[Have] you ever [visited] Chiang Mai?", "คุณเคยไปเชียงใหม่ไหม"]
+        ],
+        timeline: "ภาพนี้แสดงเหตุการณ์ที่เกิดก่อนตอนนี้ แล้วเชื่อมผลมาถึงปัจจุบัน เช่น ทำกุญแจหายและตอนนี้ยังหาไม่พบ ทั้งนี้ Perfect ไม่จำเป็นต้องหมายถึงสิ่งที่จบแล้วเสมอไป",
+        questions: [
+          { text: "She has already ___ lunch.", hint: "หลัง has ต้องใช้กริยาช่องที่ 3 ของ eat", options: ["eat", "ate", "eating", "eaten"], answer: 3, why: "Present Perfect ใช้ has + V3 โดย eat → ate → eaten จึงตอบ eaten" },
+          { text: "___ you ever seen snow?", hint: "ถามประสบการณ์ด้วย Present Perfect", options: ["Have", "Has", "Did", "Are"], answer: 0, why: "ประธาน you ใช้ Have และ seen เป็น V3 ของ see: Have you ever seen snow?" }
+        ]
+      },
+      {
+        id: "present-perfect-continuous", time: "present", aspect: "perfect-continuous",
+        name: "Present Perfect Continuous", subtitle: "ทำต่อเนื่องมาถึงตอนนี้ เน้นว่าทำมานานแค่ไหน",
+        use: "ใช้กับกิจกรรมที่เริ่มในอดีตและต่อเนื่องมาถึงตอนนี้ หรือเพิ่งหยุดและยังเห็นผลอยู่ โดยเน้นกระบวนการหรือระยะเวลามากกว่าผลงานที่เสร็จ",
+        signals: ["for two hours", "since morning", "all day", "lately"],
+        note: "for ใช้กับระยะเวลา เช่น for two hours ส่วน since ใช้กับจุดเริ่มต้น เช่น since 8 a.m. กริยาบอกสภาวะมักใช้ Present Perfect แทน",
+        patterns: ["S + have/has + been + V-ing", "S + have/has + not + been + V-ing", "Have/Has + S + been + V-ing?"],
+        examples: [
+          ["เน้นระยะเวลา", "I [have been studying] for two hours.", "ฉันเรียนต่อเนื่องมาเป็นเวลาสองชั่วโมงแล้ว"],
+          ["ปฏิเสธ", "She [has not been sleeping] well lately.", "ช่วงนี้เธอนอนหลับไม่ค่อยดี"],
+          ["คำถาม", "[Have] you [been waiting] long?", "คุณรอมานานแล้วหรือยัง"]
+        ],
+        timeline: "เส้นประเคลื่อนไปหาตอนนี้ แสดงกิจกรรมที่ต่อเนื่องมาเป็นระยะหนึ่ง เช่น เรียนมาสองชั่วโมง อาจยังทำอยู่หรือเพิ่งหยุดก็ได้",
+        questions: [
+          { text: "He ___ been running for an hour.", hint: "เติม have หรือ has ให้สอดคล้องกับประธาน", options: ["have", "is", "has", "does"], answer: 2, why: "He ใช้ has โครงสร้างเต็มคือ He has been running for an hour." },
+          { text: "We have been ___ English since 9 a.m.", hint: "หลัง have been ใน Perfect Continuous ใช้รูปใด", options: ["study", "studied", "studies", "studying"], answer: 3, why: "Perfect Continuous ใช้ have been + V-ing จึงเป็น have been studying" }
+        ]
+      },
+      {
+        id: "past-simple", time: "past", aspect: "simple",
+        name: "Past Simple", subtitle: "เหตุการณ์เกิดและจบไปแล้วในอดีต",
+        use: "ใช้เล่าเหตุการณ์ สภาวะ หรือกิจวัตรที่เกิดในอดีตและจบแล้ว มักมีเวลาอดีตชัดเจน หรือผู้พูดและผู้ฟังรู้ช่วงเวลานั้นจากบริบท",
+        signals: ["yesterday", "last week", "two days ago", "in 2020"],
+        note: "หลัง did / didn't ใช้ V1 เสมอ เช่น didn't go ไม่ใช่ didn't went ส่วน verb to be ใช้ was / were โดยไม่ใช้ did",
+        patterns: ["S + V2", "S + did + not + V1", "Did + S + V1?"],
+        examples: [
+          ["เหตุการณ์ที่จบแล้ว", "We [visited] the museum yesterday.", "พวกเราไปเยี่ยมชมพิพิธภัณฑ์เมื่อวาน"],
+          ["ปฏิเสธ", "He [did not go] to school last Monday.", "เขาไม่ได้ไปโรงเรียนเมื่อวันจันทร์ที่แล้ว"],
+          ["คำถาม", "[Did] you [watch] the film last night?", "เมื่อคืนคุณดูภาพยนตร์เรื่องนั้นไหม"]
+        ],
+        timeline: "จุดสีเขียวอยู่ทางซ้ายของตอนนี้ เหตุการณ์ถูกมองว่าเกิดและจบไปแล้ว เช่น ไปพิพิธภัณฑ์เมื่อวาน",
+        questions: [
+          { text: "We ___ to the beach yesterday.", hint: "เลือก V2 ของ go เพื่อเล่าเหตุการณ์ที่จบแล้ว", options: ["go", "went", "gone", "going"], answer: 1, why: "yesterday ระบุเวลาอดีตที่จบแล้ว ใช้ went ซึ่งเป็น V2 ของ go" },
+          { text: "She didn't ___ the email.", hint: "หลังกริยาช่วย didn't ใช้กริยารูปพื้นฐาน", options: ["sent", "sends", "send", "sending"], answer: 2, why: "didn't แสดงอดีตอยู่แล้ว กริยาหลักจึงใช้ V1 คือ send ไม่ใช่ sent" }
+        ]
+      },
+      {
+        id: "past-continuous", time: "past", aspect: "continuous",
+        name: "Past Continuous", subtitle: "กำลังทำอยู่ ณ ช่วงเวลาหนึ่งในอดีต",
+        use: "ใช้บอกเหตุการณ์ที่กำลังดำเนินอยู่ในอดีต มักเป็นฉากหลังให้เหตุการณ์สั้น ๆ ที่เข้ามาแทรก หรือใช้เล่าสองกิจกรรมที่กำลังดำเนินพร้อมกัน",
+        signals: ["at 8 p.m. yesterday", "while", "when"],
+        note: "เหตุการณ์ที่กำลังดำเนินอยู่มักใช้ Past Continuous ส่วนเหตุการณ์สั้นที่แทรกเข้ามามักใช้ Past Simple แต่ต้องดูความหมาย ไม่ใช่จำจาก when / while เพียงอย่างเดียว",
+        patterns: ["S + was/were + V-ing", "S + was/were + not + V-ing", "Was/Were + S + V-ing?"],
+        examples: [
+          ["เหตุการณ์แทรก", "I [was cooking] when the phone rang.", "ฉันกำลังทำอาหารอยู่ตอนที่โทรศัพท์ดัง"],
+          ["ปฏิเสธ", "They [were not sleeping] at 10 p.m. last night.", "เมื่อคืนตอนสี่ทุ่มพวกเขาไม่ได้กำลังนอนหลับ"],
+          ["คำถาม", "[Were] you [studying] at 8 p.m. yesterday?", "เมื่อวานตอนสองทุ่มคุณกำลังเรียนอยู่ไหม"]
+        ],
+        timeline: "แถบสีเขียวคร่อมเวลาอ้างอิงในอดีต แสดงว่าตอนนั้นกิจกรรมกำลังดำเนินอยู่ เช่น กำลังทำอาหารตอนที่โทรศัพท์ดัง",
+        questions: [
+          { text: "I ___ dinner when you called.", hint: "ใช้ Past Continuous กับกิจกรรมที่กำลังทำอยู่", options: ["am cooking", "were cooking", "was cooking", "have cooked"], answer: 2, why: "เหตุการณ์กำลังทำอาหารเป็นฉากหลังในอดีต ประธาน I ใช้ was cooking ส่วน called เป็นเหตุการณ์ที่แทรกเข้ามา" },
+          { text: "They ___ watching TV at 9 p.m. yesterday.", hint: "เลือก was หรือ were ให้ตรงกับประธาน", options: ["was", "were", "are", "have"], answer: 1, why: "They ใช้ were และเวลาอ้างอิงอยู่ในอดีต จึงเป็น were watching" }
+        ]
+      },
+      {
+        id: "past-perfect", time: "past", aspect: "perfect",
+        name: "Past Perfect", subtitle: "เกิดก่อนอีกเหตุการณ์หนึ่งในอดีต",
+        use: "ใช้มองย้อนจากจุดหนึ่งในอดีต เพื่อบอกว่าอีกเหตุการณ์เกิดก่อนจุดนั้นแล้ว ช่วยทำให้ลำดับก่อน–หลังในเรื่องเล่าชัดเจน",
+        signals: ["before", "by the time", "already", "after"],
+        note: "ไม่จำเป็นต้องใช้ Past Perfect ทุกครั้งที่มีเหตุการณ์อดีตสองเหตุการณ์ หากลำดับชัดเจนจากบริบทหรือคำเชื่อมอยู่แล้ว Past Simple ก็อาจเพียงพอ",
+        patterns: ["S + had + V3", "S + had + not + V3", "Had + S + V3?"],
+        examples: [
+          ["เกิดก่อนในอดีต", "The train [had left] before we arrived.", "รถไฟออกไปแล้วก่อนที่พวกเราจะมาถึง"],
+          ["ปฏิเสธ", "I [had not eaten] before the meeting began.", "ฉันยังไม่ได้กินอะไรก่อนการประชุมเริ่ม"],
+          ["คำถาม", "[Had] she [finished] the report before noon?", "เธอทำรายงานเสร็จก่อนเที่ยงในวันนั้นแล้วหรือยัง"]
+        ],
+        timeline: "เหตุการณ์สีเขียวอยู่ก่อนเส้นอ้างอิงในอดีต เช่น รถไฟออกก่อนที่เรามาถึง ทั้งสองเหตุการณ์เกิดก่อนตอนนี้",
+        questions: [
+          { text: "The train ___ left by the time we arrived.", hint: "ใช้ Past Perfect กับเหตุการณ์ที่เกิดก่อนเวลาหนึ่งในอดีต", options: ["has", "have", "was", "had"], answer: 3, why: "การออกของรถไฟเกิดก่อนการมาถึงในอดีต ใช้ had left เพื่อเน้นลำดับที่เกิดก่อน" },
+          { text: "She had ___ the book before the class began.", hint: "เลือกกริยาช่องที่ 3 หลัง had", options: ["finish", "finishing", "finished", "finishes"], answer: 2, why: "Past Perfect ใช้ had + V3 โดย finished เป็นทั้ง V2 และ V3 ของ finish" }
+        ]
+      },
+      {
+        id: "past-perfect-continuous", time: "past", aspect: "perfect-continuous",
+        name: "Past Perfect Continuous", subtitle: "ทำต่อเนื่องมานาน ก่อนถึงจุดหนึ่งในอดีต",
+        use: "ใช้เน้นระยะเวลาของกิจกรรมที่ดำเนินมาก่อนเวลาอ้างอิงในอดีต หรืออธิบายสาเหตุของสภาพที่เห็นในตอนนั้น",
+        signals: ["for two hours", "since morning", "before", "when"],
+        note: "เปรียบเทียบ: had written three pages เน้นผลงานสามหน้า ส่วน had been writing for an hour เน้นเวลาที่ใช้เขียน",
+        patterns: ["S + had + been + V-ing", "S + had + not + been + V-ing", "Had + S + been + V-ing?"],
+        examples: [
+          ["ระยะเวลาก่อนอดีต", "We [had been waiting] for an hour when the bus arrived.", "พวกเรารอมาแล้วหนึ่งชั่วโมงตอนที่รถบัสมาถึง"],
+          ["ปฏิเสธ", "She [had not been sleeping] well before she took a holiday.", "เธอนอนหลับไม่ค่อยดีในช่วงก่อนที่เธอจะไปพักร้อน"],
+          ["คำถาม", "[Had] he [been working] long before you arrived?", "เขาทำงานมานานแล้วหรือยังก่อนคุณมาถึง"]
+        ],
+        timeline: "เส้นประแสดงกิจกรรมต่อเนื่องก่อนเวลาอ้างอิงในอดีต เช่น รอมาหนึ่งชั่วโมงก่อนรถบัสมาถึง เน้นช่วงเวลาที่รอ ไม่ใช่แค่การรอสิ้นสุด",
+        questions: [
+          { text: "He had been ___ for two hours before he stopped.", hint: "เติม V-ing เพื่อเน้นกิจกรรมที่ทำต่อเนื่อง", options: ["run", "ran", "running", "runs"], answer: 2, why: "had been ต้องตามด้วย V-ing ในรูปนี้ run เติม n อีกหนึ่งตัวก่อน -ing เป็น running" },
+          { text: "We ___ been waiting for an hour when the bus finally arrived.", hint: "ใช้ Past Perfect Continuous เน้นระยะเวลาก่อนรถมาถึง", options: ["have", "had", "are", "has"], answer: 1, why: "เวลาอ้างอิงคือรถบัสมาถึงในอดีต กิจกรรมก่อนหน้านั้นใช้ had been waiting" }
+        ]
+      },
+      {
+        id: "future-simple", time: "future", aspect: "simple",
+        name: "Future Simple", subtitle: "การคาดการณ์ คำสัญญา และการตัดสินใจทันที",
+        use: "ใช้ will พูดถึงการคาดการณ์ ความเต็มใจ คำสัญญา หรือสิ่งที่ตัดสินใจในขณะที่พูด รูปแบบนี้เป็นหนึ่งในหลายวิธีพูดถึงอนาคต",
+        signals: ["tomorrow", "next week", "soon", "I think…"],
+        note: "แผนที่ตั้งใจไว้ก่อนมักใช้ be going to และนัดหมายที่จัดไว้แล้วมักใช้ Present Continuous จึงไม่ใช่ทุกประโยคอนาคตจะต้องใช้ will",
+        patterns: ["S + will + V1", "S + will + not + V1", "Will + S + V1?"],
+        examples: [
+          ["ตัดสินใจตอนพูด", "I'll help you. I [will carry] that bag.", "ฉันจะช่วยคุณเอง ฉันจะถือกระเป๋าใบนั้นให้"],
+          ["คำสัญญา", "I [will not forget] your birthday.", "ฉันจะไม่ลืมวันเกิดของคุณ"],
+          ["คำถาม", "[Will] you [join] us tomorrow?", "พรุ่งนี้คุณจะมาร่วมกับพวกเราไหม"]
+        ],
+        timeline: "จุดสีเขียวอยู่ทางขวาของตอนนี้ แสดงเหตุการณ์ที่คาดว่าจะเกิดในอนาคต โดยยังไม่เน้นว่ากำลังดำเนินอยู่หรือเสร็จแล้ว",
+        questions: [
+          { text: "I think it ___ rain tomorrow.", hint: "เติมคำเพื่อคาดการณ์ด้วย Future Simple", options: ["will", "was", "has", "did"], answer: 0, why: "การคาดการณ์ในรูป Future Simple ใช้ will + V1 จึงเป็น will rain" },
+          { text: "I will ___ you with your homework.", hint: "หลัง will ต้องใช้กริยารูปใด", options: ["helps", "helped", "help", "helping"], answer: 2, why: "will ตามด้วยกริยารูปพื้นฐาน V1 เสมอ จึงใช้ help โดยไม่เติม -s, -ed หรือ -ing" }
+        ]
+      },
+      {
+        id: "future-continuous", time: "future", aspect: "continuous",
+        name: "Future Continuous", subtitle: "จะกำลังทำอยู่ ณ เวลาหนึ่งในอนาคต",
+        use: "ใช้มองเข้าไปที่จุดหนึ่งในอนาคต แล้วบอกว่าตอนนั้นกิจกรรมจะกำลังดำเนินอยู่ เน้นภาพระหว่างเหตุการณ์มากกว่าจุดเริ่มหรือจุดจบ",
+        signals: ["this time tomorrow", "at 8 p.m. tomorrow", "this time next week"],
+        note: "โครงสร้างต้องมี be: will be working ไม่ใช่ will working และใช้รูปเดียวกันกับประธานทุกตัว",
+        patterns: ["S + will + be + V-ing", "S + will + not + be + V-ing", "Will + S + be + V-ing?"],
+        examples: [
+          ["ภาพอนาคตขณะดำเนินอยู่", "This time tomorrow, I [will be flying] to Tokyo.", "พรุ่งนี้เวลานี้ฉันจะกำลังบินไปโตเกียว"],
+          ["ปฏิเสธ", "She [will not be working] at 8 p.m. tomorrow.", "พรุ่งนี้ตอนสองทุ่มเธอจะไม่ได้กำลังทำงาน"],
+          ["คำถาม", "[Will] you [be using] the car at noon tomorrow?", "พรุ่งนี้ตอนเที่ยงคุณจะกำลังใช้รถอยู่ไหม"]
+        ],
+        timeline: "แถบสีเขียวคร่อมเวลาอ้างอิงในอนาคต เช่น พรุ่งนี้เวลานี้จะกำลังอยู่บนเครื่องบิน กิจกรรมนั้นกำลังดำเนินอยู่ ณ จุดที่เรามองไป",
+        questions: [
+          { text: "This time tomorrow, I will be ___ to Tokyo.", hint: "เติม V-ing ใน Future Continuous", options: ["fly", "flew", "flown", "flying"], answer: 3, why: "Future Continuous ใช้ will be + V-ing จึงเป็น will be flying" },
+          { text: "At 8 p.m. tomorrow, she ___ be studying.", hint: "เติมกริยาช่วยของ Future Continuous", options: ["has", "will", "was", "does"], answer: 1, why: "เวลาที่กำหนดอยู่ในอนาคต และโครงสร้างคือ will be studying" }
+        ]
+      },
+      {
+        id: "future-perfect", time: "future", aspect: "perfect",
+        name: "Future Perfect", subtitle: "จะเสร็จแล้วภายในจุดหนึ่งในอนาคต",
+        use: "ใช้มองย้อนจากเวลาอ้างอิงในอนาคต เพื่อบอกว่าเหตุการณ์จะเกิดขึ้นหรือเสร็จสิ้นแล้วภายในเวลานั้น",
+        signals: ["by Friday", "by then", "by the time", "before"],
+        note: "ในอนุประโยคบอกเวลา เช่น by the time you arrive โดยทั่วไปใช้ Present Simple แม้มีความหมายอนาคต ไม่ใช้ by the time you will arrive",
+        patterns: ["S + will + have + V3", "S + will + not + have + V3", "Will + S + have + V3?"],
+        examples: [
+          ["เสร็จภายในกำหนด", "I [will have finished] the report by Friday.", "ฉันจะทำรายงานเสร็จแล้วภายในวันศุกร์"],
+          ["ปฏิเสธ", "They [will not have arrived] by 6 p.m.", "พวกเขาจะยังมาไม่ถึงภายในหกโมงเย็น"],
+          ["คำถาม", "[Will] you [have completed] the course by June?", "คุณจะเรียนหลักสูตรนี้จบแล้วภายในเดือนมิถุนายนไหม"]
+        ],
+        timeline: "จุดจบของเหตุการณ์อยู่ก่อนเส้นอ้างอิงในอนาคต เช่น รายงานจะเสร็จภายในวันศุกร์ รูปนี้ไม่ระบุว่าเริ่มทำเมื่อไร",
+        questions: [
+          { text: "By Friday, I will have ___ the project.", hint: "เติม V3 ใน Future Perfect", options: ["complete", "completed", "completing", "completes"], answer: 1, why: "Future Perfect ใช้ will have + V3 จึงเป็น will have completed เพื่อบอกว่าจะเสร็จภายในวันศุกร์" },
+          { text: "She will ___ finished by the time you arrive.", hint: "หลัง will ใช้ have กับประธานทุกตัว", options: ["has", "had", "have", "having"], answer: 2, why: "หลัง will ต้องใช้รูปพื้นฐาน have แม้ประธานเป็น she จึงเป็น will have finished" }
+        ]
+      },
+      {
+        id: "future-perfect-continuous", time: "future", aspect: "perfect-continuous",
+        name: "Future Perfect Continuous", subtitle: "เมื่อถึงอนาคต จะทำต่อเนื่องมาครบระยะหนึ่ง",
+        use: "ใช้เน้นระยะเวลาของกิจกรรมที่ดำเนินต่อเนื่องไปจนถึงจุดอ้างอิงในอนาคต เช่น เมื่อถึงเดือนหน้า จะทำงานที่นี่มาครบห้าปี",
+        signals: ["for… by…", "by next month", "by the time"],
+        note: "ไม่ได้แปลว่ากิจกรรมต้องหยุดที่เวลาอ้างอิง เพียงบอกระยะเวลาที่สะสมมาถึงจุดนั้น และเป็นรูปที่พบไม่บ่อยเท่ารูปพื้นฐาน",
+        patterns: ["S + will + have + been + V-ing", "S + will + not + have + been + V-ing", "Will + S + have + been + V-ing?"],
+        examples: [
+          ["ระยะเวลาสะสมในอนาคต", "By June, I [will have been working] here for five years.", "เมื่อถึงเดือนมิถุนายน ฉันจะทำงานที่นี่มาครบห้าปี"],
+          ["ปฏิเสธ", "By noon, she [will not have been studying] for very long.", "เมื่อถึงเที่ยง เธอจะยังเรียนต่อเนื่องมาได้ไม่นานนัก"],
+          ["คำถาม", "[Will] you [have been living] here for ten years by December?", "เมื่อถึงธันวาคม คุณจะอาศัยอยู่ที่นี่มาครบสิบปีใช่ไหม"]
+        ],
+        timeline: "เส้นประยาวไปถึงเวลาอ้างอิงในอนาคต เน้นเวลาสะสม เช่น ทำงานมาครบห้าปีเมื่อถึงเดือนมิถุนายน กิจกรรมอาจดำเนินต่อหลังจากนั้น",
+        questions: [
+          { text: "By July, I will have been ___ here for a year.", hint: "เติม V-ing ใน Future Perfect Continuous", options: ["work", "worked", "working", "works"], answer: 2, why: "รูปเต็มคือ will have been + V-ing จึงใช้ working เพื่อเน้นระยะเวลาที่ทำงานมาจนถึงเดือนกรกฎาคม" },
+          { text: "By noon, we will have ___ travelling for six hours.", hint: "เติมส่วนที่หายไปของ will have been + V-ing", options: ["be", "being", "was", "been"], answer: 3, why: "ต้องใช้ been ซึ่งเป็น V3 ของ be หลัง have: will have been travelling" }
+        ]
+      }
+    ];
+
+    const timeLabels = {
+      present: { short: "ปัจจุบัน", label: "PRESENT · ปัจจุบัน" },
+      past: { short: "อดีต", label: "PAST · อดีต" },
+      future: { short: "อนาคต", label: "FUTURE · อนาคต" }
+    };
+
+    const state = {
+      lessonIndex: 0,
+      step: 0,
+      paused: false,
+      mode: "current",
+      questionIndex: 0,
+      answers: new Map()
+    };
+
+    const $ = id => document.getElementById(id);
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    /* Only developer-authored lesson content enters HTML templates.
+       Escape text first, then add controlled markup for highlighted verbs. */
+    function escapeHTML(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[char]));
+    }
+
+    function highlight(text) {
+      return escapeHTML(text).replace(/\[([^\]]+)\]/g, "<mark>$1</mark>");
+    }
+
+    function currentLesson() {
+      return lessons[state.lessonIndex];
+    }
+
+    /* ---------- Lesson navigation ---------- */
+    function buildNavigation() {
+      const fragment = document.createDocumentFragment();
+
+      Object.keys(timeLabels).forEach(time => {
+        const group = document.createElement("div");
+        group.className = "tense-group";
+        group.dataset.time = time;
+
+        const heading = document.createElement("h3");
+        heading.className = "group-title";
+        heading.innerHTML = `<span class="group-dot" aria-hidden="true"></span>${timeLabels[time].label}`;
+
+        const list = document.createElement("div");
+        list.className = "tense-list";
+
+        lessons.forEach((lesson, index) => {
+          if (lesson.time !== time) return;
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "tense-button";
+          button.dataset.lesson = index;
+          button.setAttribute("aria-pressed", String(index === state.lessonIndex));
+          button.setAttribute("aria-label", `บทที่ ${index + 1}: ${lesson.name}`);
+          button.innerHTML = `<span class="tense-number">${String(index + 1).padStart(2, "0")}</span>
+            <span lang="en">${lesson.name.replace(/^(Present|Past|Future) /, "")}</span>`;
+          button.addEventListener("click", () => selectLesson(index));
+          list.append(button);
+        });
+
+        group.append(heading, list);
+        fragment.append(group);
+      });
+
+      $("tense-map").replaceChildren(fragment);
+    }
+
+    function selectLesson(index) {
+      state.lessonIndex = index;
+      state.step = 0;
+      document.querySelectorAll("[data-lesson]").forEach(button => {
+        button.setAttribute("aria-pressed", String(Number(button.dataset.lesson) === index));
+      });
+      renderLesson();
+      if (state.mode === "current") {
+        state.questionIndex = 0;
+        renderPractice();
+      }
+    }
+
+    function renderLesson() {
+      const lesson = currentLesson();
+      $("time-badge").textContent = timeLabels[lesson.time].short;
+      $("lesson-number").textContent = `บทที่ ${state.lessonIndex + 1} / 12`;
+      $("lesson-title").textContent = lesson.name;
+      $("lesson-subtitle").textContent = lesson.subtitle;
+      $("timeline-caption").textContent = lesson.timeline;
+      renderTimeline();
+      renderStep();
+    }
+
+    /* ---------- Native SVG timeline ----------
+       The horizontal axis is fixed: past < now (320) < future.
+       An orange marker represents the tense's reference time.
+       Perfect diagrams are illustrative, not literal duration scales.
+    */
+    function renderTimeline() {
+      const lesson = currentLesson();
+      const ref = { past: 185, present: 320, future: 480 }[lesson.time];
+      const refLabel = { past: "จุดอ้างอิงในอดีต", present: "อ้างอิง: ตอนนี้", future: "จุดอ้างอิงในอนาคต" }[lesson.time];
+      let events = "";
+
+      if (lesson.aspect === "simple") {
+        const points = lesson.time === "present" ? [105, 210, 320, 430, 535] : [ref];
+        events = points.map((x, i) => `
+          <circle class="${points.length > 1 ? "repeat-dot" : "event-halo"}"
+            cx="${x}" cy="87" r="${points.length > 1 ? 10 : 15}"
+            fill="#087f80" opacity=".22" style="--delay:${i * .4}s"/>
+          <circle cx="${x}" cy="87" r="6" fill="#087f80"/>
+        `).join("");
+      } else {
+        const continuous = lesson.aspect === "continuous";
+        const perfectContinuous = lesson.aspect === "perfect-continuous";
+        const start = continuous ? ref - 78 : (lesson.time === "future" ? 150 : ref - 135);
+        const end = continuous ? ref + 78 : (perfectContinuous ? ref : ref - 22);
+
+        events = `
+          <rect x="${start}" y="73" width="${end - start}" height="28" rx="14" fill="#087f80" opacity=".10"/>
+          <line x1="${start}" y1="87" x2="${end}" y2="87"
+            stroke="#087f80" stroke-width="5" stroke-linecap="round"
+            class="${perfectContinuous ? "flow-line" : ""}"/>
+          <circle cx="${start}" cy="87" r="4" fill="#087f80"/>
+          <circle class="runner" cx="${start}" cy="87" r="7" fill="#ffffff"
+            stroke="#087f80" stroke-width="3" style="--travel:${end - start}px"/>
+        `;
+
+        if (lesson.aspect === "perfect") {
+          events += `
+            <line x1="${end}" y1="87" x2="${ref}" y2="87" stroke="#087f80" stroke-width="2" stroke-dasharray="3 4"/>
+            <circle cx="${end}" cy="87" r="10" fill="#087f80"/>
+            <path d="M${end - 4} 87l3 3 5-6" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          `;
+        } else {
+          events += `<circle cx="${end}" cy="87" r="4" fill="#087f80"/>`;
+        }
+      }
+
+      $("timeline").innerHTML = `
+        <title id="timeline-title">${escapeHTML(lesson.name)} — เส้นเวลา</title>
+        <desc id="timeline-desc">${escapeHTML(lesson.timeline)} แผนภาพไม่แสดงสัดส่วนระยะเวลาจริง</desc>
+        <line x1="42" y1="113" x2="591" y2="113" stroke="#adbec4" stroke-width="2"/>
+        <path d="M591 108l9 5-9 5" fill="none" stroke="#adbec4" stroke-width="2" stroke-linejoin="round"/>
+        <line x1="320" y1="39" x2="320" y2="126" stroke="#96aeb6" stroke-width="1.5" stroke-dasharray="4 5"/>
+        <line x1="${ref}" y1="49" x2="${ref}" y2="116" stroke="#c56920" stroke-width="2.5"/>
+        <rect x="${ref - 71}" y="19" width="142" height="25" rx="12.5" fill="#fff0dc"/>
+        <text x="${ref}" y="36" text-anchor="middle" font-size="12" fill="#91501c">${refLabel}</text>
+        ${events}
+        <text x="95" y="147" text-anchor="middle" font-size="13" fill="#617680">อดีต</text>
+        <text x="320" y="147" text-anchor="middle" font-size="13" font-weight="700" fill="#17333e">ตอนนี้</text>
+        <text x="550" y="147" text-anchor="middle" font-size="13" fill="#617680">อนาคต</text>
+      `;
+    }
+
+    /* ---------- Three accessible learning tabs ---------- */
+    function renderStep() {
+      const lesson = currentLesson();
+      const titles = ["ใช้เมื่อไร?", "ประกอบประโยคอย่างไร?", "เห็นรูปแบบในประโยคจริง"];
+      let content = "";
+
+      document.querySelectorAll(".step-tab").forEach((tab, index) => {
+        const selected = index === state.step;
+        tab.setAttribute("aria-selected", String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+      });
+      $("detail-panel").setAttribute("aria-labelledby", `tab-${state.step}`);
+      $("timeline-card").classList.toggle("focused", state.step === 0);
+
+      if (state.step === 0) {
+        content = `
+          <p class="use-text">${escapeHTML(lesson.use)}</p>
+          <div class="signal-box">
+            <strong>คำบอกเวลาที่พบบ่อย · ไม่ใช่กฎตายตัว</strong>
+            <div class="signal-words">${lesson.signals.map(word => `<span lang="en">${escapeHTML(word)}</span>`).join("")}</div>
+          </div>
+          <p class="note"><strong>จุดที่ควรจำ:</strong> ${escapeHTML(lesson.note)}</p>
+        `;
+      } else if (state.step === 1) {
+        const labels = ["บอกเล่า +", "ปฏิเสธ −", "คำถาม ?"];
+        content = `
+          <div class="formula-list">
+            ${lesson.patterns.map((pattern, index) => `
+              <div class="formula-row stagger" style="--delay:${index * .12}s">
+                <span class="formula-label">${labels[index]}</span>
+                <p class="formula" lang="en">${escapeHTML(pattern)}</p>
+              </div>
+            `).join("")}
+          </div>
+          <p class="grammar-key">S = ประธาน · V1 = กริยารูปพื้นฐาน · V2 = กริยาช่อง 2 · V3 = กริยาช่อง 3 · V-ing = กริยาเติม -ing<br>ตัวอย่าง: go → went → gone · work → worked → worked</p>
+          <p class="note">${escapeHTML(lesson.note)}</p>
+        `;
+        if (lesson.id === "present-simple" || lesson.id === "past-simple") {
+          content += `<p class="grammar-key">สูตรด้านบนใช้กับกริยาทั่วไป ส่วน be ใช้ ${
+            lesson.time === "present"
+              ? "am / is / are เช่น She is happy. → Is she happy?"
+              : "was / were เช่น She was happy. → Was she happy?"
+          } โดยไม่ใช้ do / does / did</p>`;
+        }
+      } else {
+        content = `
+          <div class="examples">
+            ${lesson.examples.map((example, index) => `
+              <article class="example stagger" style="--delay:${index * .12}s">
+                <span class="example-kind">${String(index + 1).padStart(2, "0")} · ${escapeHTML(example[0])}</span>
+                <p class="example-en" lang="en">${highlight(example[1])}</p>
+                <p class="example-th">${escapeHTML(example[2])}</p>
+              </article>
+            `).join("")}
+          </div>
+        `;
+      }
+
+      $("detail-panel").innerHTML = `
+        <div class="reveal">
+          <div class="detail-heading"><span class="detail-icon" aria-hidden="true">${state.step + 1}</span><h3>${titles[state.step]}</h3></div>
+          ${content}
+        </div>
+      `;
+      $("step-description").textContent = [
+        "เริ่มจากความหมาย ก่อนจำสูตร",
+        "สังเกตกริยาช่วย และรูปของกริยาหลัก",
+        "พร้อมแล้ว? ลองเลือกคำตอบด้วยตัวเอง"
+      ][state.step];
+      $("next-step").textContent = ["ดูโครงสร้าง →", "ดูตัวอย่าง →", "ทำแบบฝึกหัด ↓"][state.step];
+    }
+
+    function selectStep(step) {
+      state.step = step;
+      renderStep();
+    }
+
+    const tabs = [...document.querySelectorAll(".step-tab")];
+    tabs.forEach((tab, index) => {
+      tab.addEventListener("click", () => selectStep(index));
+      tab.addEventListener("keydown", event => {
+        let target = index;
+        if (event.key === "ArrowRight") target = (index + 1) % tabs.length;
+        else if (event.key === "ArrowLeft") target = (index + tabs.length - 1) % tabs.length;
+        else if (event.key === "Home") target = 0;
+        else if (event.key === "End") target = tabs.length - 1;
+        else return;
+        event.preventDefault();
+        selectStep(target);
+        tabs[target].focus();
+      });
+    });
+
+    $("next-step").addEventListener("click", () => {
+      if (state.step < 2) {
+        selectStep(state.step + 1);
+        tabs[state.step].focus();
+      } else {
+        $("practice").scrollIntoView({ behavior: motionPreference.matches ? "auto" : "smooth", block: "start" });
+        $("question-text").focus({ preventScroll: true });
+      }
+    });
+
+    /* ---------- Animation playback ---------- */
+    function syncPlayback() {
+      $("animation-scope").classList.toggle("paused", state.paused);
+      const reduced = motionPreference.matches;
+      const button = $("play-button");
+      const icon = state.paused
+        ? '<path d="M8 5l11 7-11 7V5Z" fill="currentColor"/>'
+        : '<path d="M8 5v14M16 5v14" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>';
+
+      button.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${icon}</svg>${state.paused ? "เล่น" : "พัก"}`;
+      button.setAttribute("aria-label", state.paused ? "เล่นภาพเคลื่อนไหว" : "หยุดภาพเคลื่อนไหวชั่วคราว");
+      button.disabled = reduced;
+      $("replay-button").disabled = reduced;
+      $("motion-note").textContent = reduced ? "ภาพเคลื่อนไหวปิดตามการตั้งค่าลดการเคลื่อนไหวของอุปกรณ์ แผนภาพและบทเรียนยังใช้งานได้ตามปกติ" : "";
+      $("motion-note").classList.toggle("sr-only", !reduced);
+      $("motion-note").classList.toggle("small", reduced);
+      $("motion-note").classList.toggle("muted", reduced);
+    }
+
+    $("play-button").addEventListener("click", () => {
+      state.paused = !state.paused;
+      syncPlayback();
+    });
+
+    $("replay-button").addEventListener("click", () => {
+      state.paused = false;
+      syncPlayback();
+      renderTimeline();
+      renderStep();
+    });
+
+    if (motionPreference.addEventListener) {
+      motionPreference.addEventListener("change", syncPlayback);
+    }
+
+    /* ---------- Practice engine ----------
+       Answers are stored by stable question ID, so switching lessons or
+       practice mode never awards duplicate points.
+    */
+    const allQuestions = lessons.flatMap(lesson =>
+      lesson.questions.map((question, index) => ({
+        ...question,
+        id: `${lesson.id}-${index}`,
+        lessonId: lesson.id,
+        lessonName: lesson.name
+      }))
+    );
+
+    function getQuestionBank() {
+      return state.mode === "all"
+        ? allQuestions
+        : allQuestions.filter(question => question.lessonId === currentLesson().id);
+    }
+
+    function renderPractice() {
+      const bank = getQuestionBank();
+      state.questionIndex = Math.min(state.questionIndex, bank.length - 1);
+      const question = bank[state.questionIndex];
+      const saved = state.answers.get(question.id);
+
+      $("question-tag").textContent = `ข้อ ${state.questionIndex + 1} / ${bank.length} · ${question.lessonName}`;
+      $("question-text").textContent = question.text;
+      $("question-hint").textContent = question.hint;
+
+      const fragment = document.createDocumentFragment();
+      question.options.forEach((option, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "option";
+        button.lang = "en";
+        button.innerHTML = `<span class="option-letter" aria-hidden="true">${"ABCD"[index]}</span><span>${escapeHTML(option)}</span>`;
+        button.setAttribute("aria-label", `${"ABCD"[index]}. ${option}`);
+        button.addEventListener("click", () => submitAnswer(question, index));
+        if (saved !== undefined) decorateAnswer(button, index, question, saved);
+        fragment.append(button);
+      });
+      $("options").replaceChildren(fragment);
+      updateFeedback(question, saved);
+      updateProgress(bank);
+      $("previous-question").disabled = state.questionIndex === 0;
+      $("next-question").textContent = state.questionIndex === bank.length - 1 ? "กลับข้อแรก ↺" : "ข้อถัดไป →";
+    }
+
+    function decorateAnswer(button, index, question, chosen) {
+      button.disabled = true;
+      if (index === question.answer) {
+        button.classList.add("correct");
+        button.setAttribute("aria-label", `${question.options[index]} — คำตอบที่ถูกต้อง`);
+        button.querySelector(".option-letter").textContent = "✓";
+      } else if (index === chosen) {
+        button.classList.add("incorrect");
+        button.setAttribute("aria-label", `${question.options[index]} — คำตอบที่เลือก ยังไม่ถูกต้อง`);
+        button.querySelector(".option-letter").textContent = "×";
+      }
+    }
+
+    function submitAnswer(question, selected) {
+      if (state.answers.has(question.id)) return;
+      state.answers.set(question.id, selected);
+      [...$("options").children].forEach((button, index) => {
+        decorateAnswer(button, index, question, selected);
+      });
+      updateFeedback(question, selected);
+      updateProgress(getQuestionBank());
+    }
+
+    function updateFeedback(question, chosen) {
+      const feedback = $("feedback");
+      if (chosen === undefined) {
+        feedback.hidden = true;
+        feedback.replaceChildren();
+        return;
+      }
+      const correct = chosen === question.answer;
+      feedback.hidden = false;
+      feedback.className = `feedback ${correct ? "success" : "error"}`;
+      feedback.innerHTML = `
+        <strong>${correct ? "✓ ถูกต้อง เข้าใจรูปแบบนี้แล้ว!" : "ลองสังเกตโครงสร้างอีกนิด"}</strong>
+        <p>${correct ? "" : `คำตอบที่ถูกคือ <b lang="en">${escapeHTML(question.options[question.answer])}</b> — `}${escapeHTML(question.why)}</p>
+      `;
+    }
+
+    function updateProgress(bank) {
+      const attempted = bank.filter(question => state.answers.has(question.id)).length;
+      const correct = bank.filter(question => state.answers.get(question.id) === question.answer).length;
+
+      $("practice-progress").textContent = `ทำแล้ว ${attempted} / ${bank.length} ข้อ`;
+      $("practice-score").textContent = `ตอบถูก ${correct} ข้อ`;
+      $("progress-fill").style.width = `${attempted / bank.length * 100}%`;
+      $("progress-track").setAttribute("aria-valuemax", String(bank.length));
+      $("progress-track").setAttribute("aria-valuenow", String(attempted));
+      $("progress-track").setAttribute("aria-valuetext", `ทำแล้ว ${attempted} จาก ${bank.length} ข้อ`);
+
+      const complete = attempted === bank.length;
+      $("completion").hidden = !complete;
+      if (complete) {
+        $("completion").textContent = `ทำครบชุดแล้ว! คะแนน ${correct} / ${bank.length} — ${
+          correct === bank.length
+            ? "เยี่ยมมาก ลองแต่งประโยคใหม่โดยไม่ดูสูตร หรือเลือกชุดรวมเพื่อทบทวน"
+            : "ย้อนอ่านคำอธิบายของข้อที่พลาด แล้วกด “เริ่มชุดนี้ใหม่” เพื่อฝึกอีกครั้ง"
+        }`;
+      } else {
+        $("completion").textContent = "";
+      }
+    }
+
+    function moveQuestion(direction) {
+      const bank = getQuestionBank();
+      state.questionIndex = (state.questionIndex + direction + bank.length) % bank.length;
+      renderPractice();
+      $("question-text").focus({ preventScroll: true });
+    }
+
+    $("previous-question").addEventListener("click", () => moveQuestion(-1));
+    $("next-question").addEventListener("click", () => moveQuestion(1));
+
+    $("practice-mode").addEventListener("change", event => {
+      state.mode = event.target.value;
+      state.questionIndex = 0;
+      renderPractice();
+    });
+
+    $("reset-practice").addEventListener("click", () => {
+      getQuestionBank().forEach(question => state.answers.delete(question.id));
+      state.questionIndex = 0;
+      renderPractice();
+      $("question-text").focus({ preventScroll: true });
+    });
+
+    /* ---------- Boot ---------- */
+    buildNavigation();
+    renderLesson();
+    renderPractice();
+    syncPlayback();
+  </script>
+</body>
+</html>
